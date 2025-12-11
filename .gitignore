@@ -40,3 +40,9 @@ Thumbs.db
 # Secrets
 secrets.properties
 google-services.json
+
+# Signing keys - NEVER commit these
+release-keystore.jks
+keystore-base64.txt
+*.keystore
+*.jks
