@@ -75,6 +75,9 @@ fun NavGraph(
                 onParentAccess = {
                     navController.navigate(Routes.PARENT_DASHBOARD)
                 },
+                onAddProfile = {
+                    navController.navigate(Routes.PARENT_PROFILES)
+                },
                 autoSkipIfSingle = autoSkip
             )
         }

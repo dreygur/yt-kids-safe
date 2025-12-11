@@ -66,7 +66,7 @@ class KidHomeViewModel @Inject constructor(
         _selectedCategory
     ) { videoList, channelList, playlistList, category ->
         Log.d(TAG, "Combining: ${videoList.size} videos, ${channelList.size} channels, ${playlistList.size} playlists, category=$category")
-        filterVideosByCategory(videoList, channelList, playlistList, category)
+        filterVideosByCategory(videoList, channelList, playlistList, category).shuffled()
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private var currentProfileId: String? = null

@@ -1,6 +1,7 @@
 package com.ytkidssafe.ui.screens.parent
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -87,19 +88,41 @@ fun ProfilesScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            items(profiles) { profile ->
-                ProfileCard(
-                    profile = profile,
-                    onEdit = { editingProfile = profile },
-                    onDelete = { deleteProfile = profile }
-                )
+        if (profiles.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "No profiles yet",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Tap + to create a profile",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextLight
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                items(profiles) { profile ->
+                    ProfileCard(
+                        profile = profile,
+                        onEdit = { editingProfile = profile },
+                        onDelete = { deleteProfile = profile }
+                    )
+                }
             }
         }
     }
