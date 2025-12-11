@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Card
@@ -46,6 +47,7 @@ fun ParentDashboardScreen(
     onNavigateToProfiles: () -> Unit,
     onNavigateToChannels: () -> Unit,
     onNavigateToPlaylists: () -> Unit,
+    onNavigateToCategories: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -105,10 +107,18 @@ fun ParentDashboardScreen(
             )
 
             DashboardCard(
+                icon = Icons.AutoMirrored.Filled.Label,
+                title = "Categories",
+                subtitle = "Manage content categories",
+                iconTint = Accent2,
+                onClick = onNavigateToCategories
+            )
+
+            DashboardCard(
                 icon = Icons.Default.Settings,
                 title = "Settings",
                 subtitle = "PIN, time limits, backup",
-                iconTint = Accent2,
+                iconTint = TextLight,
                 onClick = onNavigateToSettings
             )
         }
