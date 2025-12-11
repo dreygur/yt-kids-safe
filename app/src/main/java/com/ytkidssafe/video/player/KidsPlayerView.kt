@@ -1,8 +1,12 @@
 package com.ytkidssafe.video.player
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.util.Log
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
@@ -66,8 +70,10 @@ fun KidsVideoPlayer(
 ) {
     val context = LocalContext.current
     var playerState by remember { mutableStateOf<PlayerState>(PlayerState.Loading) }
+    val window = context.findActivity()?.window
 
     val streamExtractor = remember { StreamExtractor() }
+    var isPlaying by remember { mutableStateOf(false) }
 
     // ExoPlayer instance (created but may not be used)
     val exoPlayer = remember {
@@ -83,6 +89,10 @@ fun KidsVideoPlayer(
                 override fun onPlayerError(error: PlaybackException) {
                     Log.e(TAG, "ExoPlayer error: ${error.message}, falling back to WebView")
                     playerState = PlayerState.WebViewPlayer
+                }
+
+                override fun onIsPlayingChanged(playing: Boolean) {
+                    isPlaying = playing
                 }
             })
         }
@@ -129,9 +139,23 @@ fun KidsVideoPlayer(
         }
     }
 
-    DisposableEffect(Unit) {
+    LaunchedEffect(playerState, isPlaying) {
+        val keepOn = when (playerState) {
+            is PlayerState.NativePlayer -> isPlaying
+            is PlayerState.WebViewPlayer -> true
+            else -> false
+        }
+        if (keepOn) {
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
+
+    DisposableEffect(window) {
         onDispose {
             Log.d(TAG, "Disposing player")
+            window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             exoPlayer.release()
         }
     }
@@ -298,4 +322,13 @@ fun FullscreenVideoPlayer(
         onTimeUpdate = onTimeUpdate,
         modifier = Modifier.fillMaxSize()
     )
+}
+
+private fun Context.findActivity(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity) return context
+        context = context.baseContext
+    }
+    return null
 }
