@@ -74,10 +74,10 @@ class StreamExtractor @Inject constructor() {
             val streamInfo = StreamInfo.getInfo(ServiceList.YouTube, url)
 
             val videoStreams = streamInfo.videoStreams
-                .filter { !it.url.isNullOrBlank() }
+                .filter { !it.content.isNullOrBlank() }
                 .map { stream ->
                     ExtractedVideoStream(
-                        url = stream.url ?: "",
+                        url = stream.content ?: "",
                         quality = stream.getResolution() ?: "unknown",
                         format = stream.format?.name ?: "unknown",
                         width = stream.width,
@@ -88,10 +88,10 @@ class StreamExtractor @Inject constructor() {
                 .sortedByDescending { it.height }
 
             val videoOnlyStreams = streamInfo.videoOnlyStreams
-                .filter { !it.url.isNullOrBlank() }
+                .filter { !it.content.isNullOrBlank() }
                 .map { stream ->
                     ExtractedVideoStream(
-                        url = stream.url ?: "",
+                        url = stream.content ?: "",
                         quality = stream.getResolution() ?: "unknown",
                         format = stream.format?.name ?: "unknown",
                         width = stream.width,
@@ -102,10 +102,10 @@ class StreamExtractor @Inject constructor() {
                 .sortedByDescending { it.height }
 
             val audioStreams = streamInfo.audioStreams
-                .filter { !it.url.isNullOrBlank() }
+                .filter { !it.content.isNullOrBlank() }
                 .map { stream ->
                     ExtractedAudioStream(
-                        url = stream.url ?: "",
+                        url = stream.content ?: "",
                         averageBitrate = stream.averageBitrate,
                         format = stream.format?.name ?: "unknown"
                     )
