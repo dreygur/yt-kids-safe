@@ -319,11 +319,13 @@ private fun ProfileDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (profile == null) "Add Profile" else "Edit Profile") },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-            ) {
+            val verticalScrollState = rememberScrollState()
+            Box {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(verticalScrollState)
+                ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -526,6 +528,26 @@ private fun ProfileDialog(
                             )
                         }
                     }
+                }
+                }
+                // Vertical scroll indicator at bottom
+                if (verticalScrollState.canScrollForward) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .fillMaxWidth()
+                            .height(32.dp)
+                            .background(
+                                brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surface,
+                                        androidx.compose.ui.graphics.Color.Transparent
+                                    ),
+                                    center = androidx.compose.ui.geometry.Offset(0.5f, Float.POSITIVE_INFINITY),
+                                    radius = 200f
+                                )
+                            )
+                    )
                 }
             }
         },
