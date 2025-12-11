@@ -30,23 +30,21 @@
     volatile <fields>;
 }
 
-# Rhino JavaScript Engine (used by NewPipe extractor)
+# Rhino JavaScript Engine - specific missing classes
+-dontwarn java.beans.BeanDescriptor
+-dontwarn java.beans.BeanInfo
+-dontwarn java.beans.IntrospectionException
+-dontwarn java.beans.Introspector
+-dontwarn java.beans.PropertyDescriptor
+-dontwarn javax.script.ScriptEngineFactory
+
+# Rhino general
 -keep class org.mozilla.** { *; }
--keepclassmembers class org.mozilla.** { *; }
 -dontwarn org.mozilla.**
 
 # NewPipe Extractor
 -keep class org.schabi.newpipe.extractor.** { *; }
--keepclassmembers class org.schabi.newpipe.extractor.** { *; }
 -dontwarn org.schabi.newpipe.extractor.**
-
-# Missing Java SE classes not available on Android
--dontwarn java.beans.**
--dontwarn java.awt.**
--dontwarn javax.swing.**
--dontwarn javax.script.**
--dontwarn javax.naming.**
--dontwarn sun.misc.**
 
 # OkHttp / Okio
 -dontwarn okhttp3.**
@@ -58,10 +56,13 @@
 -keep class org.jsoup.** { *; }
 -dontwarn org.jsoup.**
 
-# Keep all annotations
+# General Java SE classes not on Android
+-dontwarn java.awt.**
+-dontwarn javax.swing.**
+-dontwarn javax.naming.**
+-dontwarn sun.misc.**
+
+# Keep annotations
 -keepattributes *Annotation*
 -keepattributes Signature
 -keepattributes Exceptions
-
-# Ignore all missing class warnings for R8
--ignorewarnings
