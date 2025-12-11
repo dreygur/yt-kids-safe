@@ -375,7 +375,10 @@ private fun ProfileDialog(
                         color = TextLight
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
                         items(allChannels) { channel ->
                             SelectableContentItem(
                                 thumbnailUrl = channel.thumbnailUrl,
@@ -411,7 +414,10 @@ private fun ProfileDialog(
                         color = TextLight
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
                         items(allPlaylists) { playlist ->
                             SelectableContentItem(
                                 thumbnailUrl = playlist.thumbnailUrl,
