@@ -77,12 +77,12 @@ class YouTubeService @Inject constructor() {
             val response = fetchUrl(url)
 
             if (response != null) {
-                val videos = parseRssFeed(response)
-                Log.d(TAG, "Playlist fetched: ${videos.size} videos")
+                val (playlistTitle, videos) = parsePlaylistRssFeed(response)
+                Log.d(TAG, "Playlist fetched: $playlistTitle with ${videos.size} videos")
 
                 Result.success(PlaylistInfo(
                     id = playlistId,
-                    title = "Playlist",
+                    title = playlistTitle,
                     videoCount = videos.size,
                     thumbnailUrl = videos.firstOrNull()?.thumbnailUrl ?: "",
                     videos = videos
@@ -295,6 +295,82 @@ class YouTubeService @Inject constructor() {
             Log.e(TAG, "Error extracting channel info: ${e.message}")
             return Pair(null, "")
         }
+    }
+
+    /**
+     * Parse playlist RSS feed and return playlist title + videos
+     */
+    private fun parsePlaylistRssFeed(xml: String): Pair<String, List<VideoInfo>> {
+        var playlistTitle = "Playlist"
+        val videos = mutableListOf<VideoInfo>()
+
+        try {
+            val factory = XmlPullParserFactory.newInstance()
+            val parser = factory.newPullParser()
+            parser.setInput(StringReader(xml))
+
+            var currentVideoId: String? = null
+            var currentTitle: String? = null
+            var currentThumbnail: String? = null
+            var currentAuthor: String? = null
+            var inEntry = false
+            var inAuthor = false
+            var foundPlaylistTitle = false
+
+            while (parser.eventType != XmlPullParser.END_DOCUMENT) {
+                when (parser.eventType) {
+                    XmlPullParser.START_TAG -> {
+                        when (parser.name) {
+                            "entry" -> {
+                                inEntry = true
+                                currentVideoId = null
+                                currentTitle = null
+                                currentThumbnail = null
+                                currentAuthor = null
+                            }
+                            "author" -> inAuthor = true
+                            "yt:videoId" -> if (inEntry) currentVideoId = parser.nextText()
+                            "title" -> {
+                                val title = parser.nextText()
+                                if (inEntry && !inAuthor) {
+                                    currentTitle = title
+                                } else if (!inEntry && !foundPlaylistTitle) {
+                                    playlistTitle = title
+                                    foundPlaylistTitle = true
+                                }
+                            }
+                            "name" -> if (inAuthor) currentAuthor = parser.nextText()
+                            "media:thumbnail" -> if (inEntry) {
+                                currentThumbnail = parser.getAttributeValue(null, "url")
+                            }
+                        }
+                    }
+                    XmlPullParser.END_TAG -> {
+                        when (parser.name) {
+                            "entry" -> {
+                                if (currentVideoId != null && currentTitle != null) {
+                                    videos.add(VideoInfo(
+                                        youtubeId = currentVideoId,
+                                        title = currentTitle,
+                                        thumbnailUrl = currentThumbnail
+                                            ?: "https://img.youtube.com/vi/$currentVideoId/mqdefault.jpg",
+                                        duration = "",
+                                        channelName = currentAuthor ?: "Unknown"
+                                    ))
+                                }
+                                inEntry = false
+                            }
+                            "author" -> inAuthor = false
+                        }
+                    }
+                }
+                parser.next()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing playlist RSS: ${e.message}")
+        }
+
+        return Pair(playlistTitle, videos.take(50))
     }
 
     /**
