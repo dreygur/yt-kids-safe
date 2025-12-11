@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -45,7 +46,9 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ytkidssafe.BuildConfig
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ytkidssafe.ui.components.PinDialog
 import com.ytkidssafe.ui.theme.Background
@@ -58,6 +61,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onNavigateToCredits: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -199,6 +203,24 @@ fun SettingsScreen(
                 onClick = {
                     importLauncher.launch(arrayOf("application/json"))
                 }
+            )
+
+            // Open Source Libraries
+            SettingsCard(
+                icon = Icons.Default.Info,
+                title = "Open Source Libraries",
+                subtitle = "View third-party licenses",
+                onClick = onNavigateToCredits
+            )
+
+            // App footer
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "YT Kids Safe v${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextLight,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

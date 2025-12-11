@@ -16,6 +16,7 @@ import com.ytkidssafe.ui.screens.kid.KidPlaylistVideosScreen
 import com.ytkidssafe.ui.screens.kid.TimesUpScreen
 import com.ytkidssafe.ui.screens.kid.VideoPlayerScreen
 import com.ytkidssafe.ui.screens.parent.CategoriesScreen
+import com.ytkidssafe.ui.screens.parent.CreditsScreen
 import com.ytkidssafe.ui.screens.parent.ChannelsScreen
 import com.ytkidssafe.ui.screens.parent.ParentDashboardScreen
 import com.ytkidssafe.ui.screens.parent.PlaylistsScreen
@@ -38,6 +39,7 @@ object Routes {
     const val PARENT_PLAYLISTS = "parent_playlists"
     const val PARENT_CATEGORIES = "parent_categories"
     const val PARENT_SETTINGS = "parent_settings"
+    const val PARENT_CREDITS = "parent_credits"
 
     fun kidHome(profileId: String) = "kid_home/$profileId"
     fun kidChannels(profileId: String) = "kid_channels/$profileId"
@@ -298,7 +300,15 @@ fun NavGraph(
 
         // Parent Settings
         composable(Routes.PARENT_SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToCredits = { navController.navigate(Routes.PARENT_CREDITS) }
+            )
+        }
+
+        // Parent Credits
+        composable(Routes.PARENT_CREDITS) {
+            CreditsScreen(onBack = { navController.popBackStack() })
         }
     }
 }
