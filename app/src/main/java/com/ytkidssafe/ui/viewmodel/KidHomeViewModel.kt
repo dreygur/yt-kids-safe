@@ -126,25 +126,31 @@ class KidHomeViewModel @Inject constructor(
         playlists: List<Playlist>,
         category: String
     ): List<Video> {
+        // First filter by assigned channels/playlists (profile permission)
+        val assignedChannelIds = channels.map { it.id }.toSet()
+        val assignedPlaylistIds = playlists.map { it.id }.toSet()
+
+        val profileVideos = videos.filter { video ->
+            video.channelId in assignedChannelIds || video.playlistId in assignedPlaylistIds
+        }
+        Log.d(TAG, "Profile videos: ${profileVideos.size} (from ${assignedChannelIds.size} channels, ${assignedPlaylistIds.size} playlists)")
+
         if (category == "All") {
-            Log.d(TAG, "Returning all ${videos.size} videos")
-            return videos
+            return profileVideos
         }
 
-        // Get channel IDs matching category
+        // Further filter by category
         val categoryChannelIds = channels
             .filter { it.category == category }
             .map { it.id }
             .toSet()
 
-        // Get playlist IDs matching category
         val categoryPlaylistIds = playlists
             .filter { it.category == category }
             .map { it.id }
             .toSet()
 
-        // Filter videos that belong to matching channels OR playlists
-        val filtered = videos.filter { video ->
+        val filtered = profileVideos.filter { video ->
             video.channelId in categoryChannelIds || video.playlistId in categoryPlaylistIds
         }
         Log.d(TAG, "Filtered to ${filtered.size} videos for category: $category")
