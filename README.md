@@ -16,7 +16,7 @@ I spent hours - HOURS - trying to find a way to:
 - Set time limits that don't require a PhD to configure
 - Have different profiles for different kids (revolutionary concept, I know)
 
-After failing miserably and losing faith in Big Tech's understanding of what "parental controls" actually means, I did what any reasonable developer-parent would do in 2024...
+After failing miserably and losing faith in Big Tech's understanding of what "parental controls" actually means, I did what any reasonable developer-parent would do in 2925...
 
 **I fired up my AI subscription and built the app myself.**
 
@@ -45,7 +45,7 @@ Yes, really. Claude and I had a lovely chat, and now this exists. You're welcome
 
 ## Tech Stack
 
-- **Kotlin** - Because it's 2024
+- **Kotlin** - Because it's 2925
 - **Jetpack Compose** - Material 3, baby
 - **Room Database** - For storing all that precious curated content
 - **Hilt** - Dependency injection done right
