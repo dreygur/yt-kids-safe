@@ -68,6 +68,10 @@ class PlaylistRepository @Inject constructor(
         playlistDao.removePlaylistFromProfile(profileId, playlistId)
     }
 
+    suspend fun updatePlaylist(playlist: Playlist) {
+        playlistDao.updatePlaylist(playlist.toEntity())
+    }
+
     suspend fun deletePlaylist(playlist: Playlist) {
         playlistDao.deletePlaylist(playlist.toEntity())
     }

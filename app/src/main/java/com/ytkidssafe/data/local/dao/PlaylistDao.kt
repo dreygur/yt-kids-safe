@@ -31,6 +31,9 @@ interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertProfilePlaylistCrossRef(crossRef: ProfilePlaylistCrossRef)
 
+    @Update
+    suspend fun updatePlaylist(playlist: PlaylistEntity)
+
     @Delete
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 

@@ -18,9 +18,7 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -60,8 +58,6 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
-    onNavigateToChannels: () -> Unit = {},
-    onNavigateToPlaylists: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -138,22 +134,6 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Manage Channels
-            SettingsCard(
-                icon = Icons.Default.Tv,
-                title = "Manage Channels",
-                subtitle = "Add or remove YouTube channels",
-                onClick = onNavigateToChannels
-            )
-
-            // Manage Playlists
-            SettingsCard(
-                icon = Icons.AutoMirrored.Filled.PlaylistPlay,
-                title = "Manage Playlists",
-                subtitle = "Import YouTube playlists",
-                onClick = onNavigateToPlaylists
-            )
-
             // Change PIN
             SettingsCard(
                 icon = Icons.Default.Lock,

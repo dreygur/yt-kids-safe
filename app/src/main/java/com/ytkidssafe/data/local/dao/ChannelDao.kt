@@ -31,6 +31,9 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertProfileChannelCrossRef(crossRef: ProfileChannelCrossRef)
 
+    @Update
+    suspend fun updateChannel(channel: ChannelEntity)
+
     @Delete
     suspend fun deleteChannel(channel: ChannelEntity)
 

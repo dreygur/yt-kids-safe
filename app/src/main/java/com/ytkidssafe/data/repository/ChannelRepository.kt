@@ -61,6 +61,10 @@ class ChannelRepository @Inject constructor(
         channelDao.removeChannelFromProfile(profileId, channelId)
     }
 
+    suspend fun updateChannel(channel: Channel) {
+        channelDao.updateChannel(channel.toEntity())
+    }
+
     suspend fun deleteChannel(channel: Channel) {
         channelDao.deleteChannel(channel.toEntity())
     }

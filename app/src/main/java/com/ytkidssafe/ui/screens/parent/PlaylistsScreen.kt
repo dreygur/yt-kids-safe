@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -73,11 +74,13 @@ fun PlaylistsScreen(
     viewModel: PlaylistsViewModel = hiltViewModel()
 ) {
     val playlists by viewModel.playlists.collectAsState()
+    val categories by viewModel.categories.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val importSuccess by viewModel.importSuccess.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingPlaylist by remember { mutableStateOf<Playlist?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(error) {
@@ -155,6 +158,7 @@ fun PlaylistsScreen(
                     items(playlists) { playlist ->
                         PlaylistCard(
                             playlist = playlist,
+                            onEdit = { editingPlaylist = playlist },
                             onDelete = { viewModel.deletePlaylist(playlist) }
                         )
                     }
@@ -176,81 +180,28 @@ fun PlaylistsScreen(
 
     // Import Playlist Dialog
     if (showAddDialog) {
-        var url by remember { mutableStateOf("") }
-        var selectedCategory by remember { mutableStateOf("All") }
-        var expanded by remember { mutableStateOf(false) }
-        val categories = listOf("All", "Cartoons", "Learning", "Music", "Stories")
+        ImportPlaylistDialog(
+            categories = categories,
+            onDismiss = { showAddDialog = false },
+            onImport = { url, category ->
+                viewModel.importPlaylist(url, category)
+                showAddDialog = false
+            },
+            onAddCategory = { viewModel.addCategory(it) }
+        )
+    }
 
-        AlertDialog(
-            onDismissRequest = { showAddDialog = false },
-            title = { Text("Import Playlist") },
-            text = {
-                Column {
-                    Text(
-                        "Paste a YouTube playlist URL",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextLight
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    OutlinedTextField(
-                        value = url,
-                        onValueChange = { url = it },
-                        label = { Text("Playlist URL") },
-                        placeholder = { Text("youtube.com/playlist?list=...") },
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Category",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextLight
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it }
-                    ) {
-                        OutlinedTextField(
-                            value = selectedCategory,
-                            onValueChange = {},
-                            readOnly = true,
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
-                        )
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            categories.forEach { category ->
-                                DropdownMenuItem(
-                                    text = { Text(category) },
-                                    onClick = {
-                                        selectedCategory = category
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-                }
+    // Edit Playlist Category Dialog
+    if (editingPlaylist != null) {
+        EditPlaylistCategoryDialog(
+            playlist = editingPlaylist!!,
+            categories = categories,
+            onDismiss = { editingPlaylist = null },
+            onSave = { category ->
+                viewModel.updatePlaylistCategory(editingPlaylist!!, category)
+                editingPlaylist = null
             },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        viewModel.importPlaylist(url, selectedCategory)
-                        showAddDialog = false
-                    },
-                    enabled = url.isNotBlank()
-                ) {
-                    Text("Import")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showAddDialog = false }) { Text("Cancel") }
-            }
+            onAddCategory = { viewModel.addCategory(it) }
         )
     }
 }
@@ -258,6 +209,7 @@ fun PlaylistsScreen(
 @Composable
 private fun PlaylistCard(
     playlist: Playlist,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -307,13 +259,31 @@ private fun PlaylistCard(
                     color = TextPrimary,
                     maxLines = 2
                 )
-                if (playlist.videoCount > 0) {
-                    Text(
-                        text = "${playlist.videoCount} videos",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextLight
-                    )
+                Row {
+                    if (playlist.videoCount > 0) {
+                        Text(
+                            text = "${playlist.videoCount} videos",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLight
+                        )
+                    }
+                    if (playlist.category != "All") {
+                        Text(
+                            text = " • ${playlist.category}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLight
+                        )
+                    }
                 }
+            }
+
+            // Edit button
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = Primary
+                )
             }
 
             // Delete button
@@ -326,4 +296,227 @@ private fun PlaylistCard(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ImportPlaylistDialog(
+    categories: List<String>,
+    onDismiss: () -> Unit,
+    onImport: (String, String) -> Unit,
+    onAddCategory: (String) -> Unit
+) {
+    var url by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All") }
+    var expanded by remember { mutableStateOf(false) }
+    var newCategory by remember { mutableStateOf("") }
+    var showAddCategory by remember { mutableStateOf(false) }
+    val allCategories = listOf("All") + categories
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Import Playlist") },
+        text = {
+            Column {
+                Text(
+                    "Paste a YouTube playlist URL",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = url,
+                    onValueChange = { url = it },
+                    label = { Text("Playlist URL") },
+                    placeholder = { Text("youtube.com/playlist?list=...") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Category",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        allCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    expanded = false
+                                }
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("+ Add New Category", color = Primary) },
+                            onClick = {
+                                expanded = false
+                                showAddCategory = true
+                            }
+                        )
+                    }
+                }
+                if (showAddCategory) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = newCategory,
+                            onValueChange = { newCategory = it },
+                            label = { Text("New Category") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (newCategory.isNotBlank()) {
+                                    onAddCategory(newCategory)
+                                    selectedCategory = newCategory
+                                    newCategory = ""
+                                    showAddCategory = false
+                                }
+                            },
+                            enabled = newCategory.isNotBlank()
+                        ) {
+                            Text("Add")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onImport(url, selectedCategory) },
+                enabled = url.isNotBlank()
+            ) {
+                Text("Import")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditPlaylistCategoryDialog(
+    playlist: Playlist,
+    categories: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    onAddCategory: (String) -> Unit
+) {
+    var selectedCategory by remember { mutableStateOf(playlist.category) }
+    var expanded by remember { mutableStateOf(false) }
+    var newCategory by remember { mutableStateOf("") }
+    var showAddCategory by remember { mutableStateOf(false) }
+    val allCategories = listOf("All") + categories
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Category") },
+        text = {
+            Column {
+                Text(
+                    playlist.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Category",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        allCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    expanded = false
+                                }
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("+ Add New Category", color = Primary) },
+                            onClick = {
+                                expanded = false
+                                showAddCategory = true
+                            }
+                        )
+                    }
+                }
+                if (showAddCategory) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = newCategory,
+                            onValueChange = { newCategory = it },
+                            label = { Text("New Category") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (newCategory.isNotBlank()) {
+                                    onAddCategory(newCategory)
+                                    selectedCategory = newCategory
+                                    newCategory = ""
+                                    showAddCategory = false
+                                }
+                            },
+                            enabled = newCategory.isNotBlank()
+                        ) {
+                            Text("Add")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(selectedCategory) }) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
 }

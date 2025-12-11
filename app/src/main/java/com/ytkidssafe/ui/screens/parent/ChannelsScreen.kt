@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -70,11 +71,13 @@ fun ChannelsScreen(
     viewModel: ChannelManageViewModel = hiltViewModel()
 ) {
     val channels by viewModel.channels.collectAsState()
+    val categories by viewModel.categories.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val successMessage by viewModel.successMessage.collectAsState()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingChannel by remember { mutableStateOf<Channel?>(null) }
     var deleteChannel by remember { mutableStateOf<Channel?>(null) }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -162,6 +165,7 @@ fun ChannelsScreen(
                 items(channels) { channel ->
                     ChannelCard(
                         channel = channel,
+                        onEdit = { editingChannel = channel },
                         onDelete = { deleteChannel = channel }
                     )
                 }
@@ -172,11 +176,27 @@ fun ChannelsScreen(
     // Add Channel Dialog
     if (showAddDialog) {
         AddChannelDialog(
+            categories = categories,
             onDismiss = { showAddDialog = false },
             onAdd = { url, category ->
                 viewModel.addChannelFromUrl(url, category)
                 showAddDialog = false
-            }
+            },
+            onAddCategory = { viewModel.addCategory(it) }
+        )
+    }
+
+    // Edit Channel Category Dialog
+    if (editingChannel != null) {
+        EditChannelCategoryDialog(
+            channel = editingChannel!!,
+            categories = categories,
+            onDismiss = { editingChannel = null },
+            onSave = { category ->
+                viewModel.updateChannelCategory(editingChannel!!, category)
+                editingChannel = null
+            },
+            onAddCategory = { viewModel.addCategory(it) }
         )
     }
 
@@ -208,6 +228,7 @@ fun ChannelsScreen(
 @Composable
 private fun ChannelCard(
     channel: Channel,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -240,6 +261,9 @@ private fun ChannelCard(
                 )
             }
 
+            IconButton(onClick = onEdit) {
+                Icon(Icons.Default.Edit, "Edit", tint = Primary)
+            }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, "Delete", tint = MaterialTheme.colorScheme.error)
             }
@@ -250,13 +274,17 @@ private fun ChannelCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddChannelDialog(
+    categories: List<String>,
     onDismiss: () -> Unit,
-    onAdd: (String, String) -> Unit
+    onAdd: (String, String) -> Unit,
+    onAddCategory: (String) -> Unit
 ) {
     var url by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("All") }
     var expanded by remember { mutableStateOf(false) }
-    val categories = listOf("All", "Cartoons", "Learning", "Music", "Stories")
+    var newCategory by remember { mutableStateOf("") }
+    var showAddCategory by remember { mutableStateOf(false) }
+    val allCategories = listOf("All") + categories
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -300,7 +328,7 @@ private fun AddChannelDialog(
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        categories.forEach { category ->
+                        allCategories.forEach { category ->
                             DropdownMenuItem(
                                 text = { Text(category) },
                                 onClick = {
@@ -308,6 +336,39 @@ private fun AddChannelDialog(
                                     expanded = false
                                 }
                             )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("+ Add New Category", color = Primary) },
+                            onClick = {
+                                expanded = false
+                                showAddCategory = true
+                            }
+                        )
+                    }
+                }
+                if (showAddCategory) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = newCategory,
+                            onValueChange = { newCategory = it },
+                            label = { Text("New Category") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (newCategory.isNotBlank()) {
+                                    onAddCategory(newCategory)
+                                    selectedCategory = newCategory
+                                    newCategory = ""
+                                    showAddCategory = false
+                                }
+                            },
+                            enabled = newCategory.isNotBlank()
+                        ) {
+                            Text("Add")
                         }
                     }
                 }
@@ -319,6 +380,111 @@ private fun AddChannelDialog(
                 enabled = url.isNotBlank()
             ) {
                 Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel") }
+        }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditChannelCategoryDialog(
+    channel: Channel,
+    categories: List<String>,
+    onDismiss: () -> Unit,
+    onSave: (String) -> Unit,
+    onAddCategory: (String) -> Unit
+) {
+    var selectedCategory by remember { mutableStateOf(channel.category) }
+    var expanded by remember { mutableStateOf(false) }
+    var newCategory by remember { mutableStateOf("") }
+    var showAddCategory by remember { mutableStateOf(false) }
+    val allCategories = listOf("All") + categories
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Edit Category") },
+        text = {
+            Column {
+                Text(
+                    channel.title,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Category",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable, true)
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        allCategories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    expanded = false
+                                }
+                            )
+                        }
+                        DropdownMenuItem(
+                            text = { Text("+ Add New Category", color = Primary) },
+                            onClick = {
+                                expanded = false
+                                showAddCategory = true
+                            }
+                        )
+                    }
+                }
+                if (showAddCategory) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        OutlinedTextField(
+                            value = newCategory,
+                            onValueChange = { newCategory = it },
+                            label = { Text("New Category") },
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (newCategory.isNotBlank()) {
+                                    onAddCategory(newCategory)
+                                    selectedCategory = newCategory
+                                    newCategory = ""
+                                    showAddCategory = false
+                                }
+                            },
+                            enabled = newCategory.isNotBlank()
+                        ) {
+                            Text("Add")
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onSave(selectedCategory) }) {
+                Text("Save")
             }
         },
         dismissButton = {
