@@ -2,6 +2,9 @@ package com.ytkidssafe.ui.screens.kid
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import android.view.WindowInsets
+import android.view.WindowInsetsController
+import androidx.core.view.WindowCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,12 +80,27 @@ fun VideoPlayerScreen(
     val youtubeId by viewModel.youtubeId.collectAsState()
     var controlsVisible by remember { mutableStateOf(false) }
 
-    // Force landscape orientation like YouTube Kids
+    // Force landscape + immersive full-screen mode
     DisposableEffect(Unit) {
         val activity = context as? Activity
         activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+
+        // Hide status bar
+        activity?.window?.let { window ->
+            WindowCompat.setDecorFitsSystemWindows(window, false)
+            window.insetsController?.apply {
+                hide(WindowInsets.Type.statusBars())
+                systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+
         onDispose {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+            // Restore status bar
+            activity?.window?.let { window ->
+                WindowCompat.setDecorFitsSystemWindows(window, true)
+                window.insetsController?.show(WindowInsets.Type.statusBars())
+            }
         }
     }
 
