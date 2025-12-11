@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Schedule
@@ -58,6 +59,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsScreen(
     onBack: () -> Unit,
+    onNavigateToCategories: () -> Unit = {},
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val scope = rememberCoroutineScope()
@@ -134,6 +136,14 @@ fun SettingsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Manage Categories
+            SettingsCard(
+                icon = Icons.AutoMirrored.Filled.Label,
+                title = "Manage Categories",
+                subtitle = "Add or remove content categories",
+                onClick = onNavigateToCategories
+            )
+
             // Change PIN
             SettingsCard(
                 icon = Icons.Default.Lock,

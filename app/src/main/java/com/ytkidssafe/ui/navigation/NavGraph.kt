@@ -15,6 +15,7 @@ import com.ytkidssafe.ui.screens.kid.KidPlaylistsScreen
 import com.ytkidssafe.ui.screens.kid.KidPlaylistVideosScreen
 import com.ytkidssafe.ui.screens.kid.TimesUpScreen
 import com.ytkidssafe.ui.screens.kid.VideoPlayerScreen
+import com.ytkidssafe.ui.screens.parent.CategoriesScreen
 import com.ytkidssafe.ui.screens.parent.ChannelsScreen
 import com.ytkidssafe.ui.screens.parent.ParentDashboardScreen
 import com.ytkidssafe.ui.screens.parent.PlaylistsScreen
@@ -35,6 +36,7 @@ object Routes {
     const val PARENT_PROFILES = "parent_profiles"
     const val PARENT_CHANNELS = "parent_channels"
     const val PARENT_PLAYLISTS = "parent_playlists"
+    const val PARENT_CATEGORIES = "parent_categories"
     const val PARENT_SETTINGS = "parent_settings"
 
     fun kidHome(profileId: String) = "kid_home/$profileId"
@@ -288,9 +290,17 @@ fun NavGraph(
             PlaylistsScreen(onBack = { navController.popBackStack() })
         }
 
+        // Parent Categories
+        composable(Routes.PARENT_CATEGORIES) {
+            CategoriesScreen(onBack = { navController.popBackStack() })
+        }
+
         // Parent Settings
         composable(Routes.PARENT_SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToCategories = { navController.navigate(Routes.PARENT_CATEGORIES) }
+            )
         }
     }
 }
