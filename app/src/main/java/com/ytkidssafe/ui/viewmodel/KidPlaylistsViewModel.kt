@@ -32,8 +32,8 @@ class KidPlaylistsViewModel @Inject constructor(
     private val _timeStatus = MutableStateFlow(TimeStatus(60, 60, 0))
     val timeStatus: StateFlow<TimeStatus> = _timeStatus.asStateFlow()
 
-    val playlists: StateFlow<List<Playlist>> = playlistRepository.getAllPlaylists()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
+    val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
 
     private var currentProfileId: String? = null
 
@@ -46,6 +46,11 @@ class KidPlaylistsViewModel @Inject constructor(
             val p = profiles.find { it.id == profileId }
             _profile.value = p
             p?.let { updateTimeStatus(it) }
+
+            // Load profile-specific playlists
+            playlistRepository.getPlaylistsForProfile(profileId).collect { playlists ->
+                _playlists.value = playlists
+            }
         }
     }
 

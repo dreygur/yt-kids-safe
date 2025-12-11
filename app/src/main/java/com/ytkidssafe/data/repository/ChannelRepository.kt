@@ -73,6 +73,16 @@ class ChannelRepository @Inject constructor(
         return channelDao.isChannelAssignedToProfile(profileId, channelId)
     }
 
+    suspend fun getAssignedChannelIds(profileId: String): List<String> {
+        return channelDao.getAssignedChannelIds(profileId)
+    }
+
+    suspend fun setChannelsForProfile(profileId: String, channelIds: List<String>) {
+        channelDao.clearChannelsForProfile(profileId)
+        val refs = channelIds.map { ProfileChannelCrossRef(profileId, it) }
+        channelDao.insertProfileChannelRefs(refs)
+    }
+
     private fun ChannelEntity.toDomain(): Channel {
         return Channel(
             id = id,

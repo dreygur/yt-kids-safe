@@ -2,8 +2,12 @@ package com.ytkidssafe.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ytkidssafe.data.repository.ChannelRepository
+import com.ytkidssafe.data.repository.PlaylistRepository
 import com.ytkidssafe.data.repository.ProfileRepository
 import com.ytkidssafe.data.repository.SettingsRepository
+import com.ytkidssafe.domain.model.Channel
+import com.ytkidssafe.domain.model.Playlist
 import com.ytkidssafe.domain.model.Profile
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,7 +23,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileSelectViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
+    private val channelRepository: ChannelRepository,
+    private val playlistRepository: PlaylistRepository
 ) : ViewModel() {
 
     private val _profiles = MutableStateFlow<List<Profile>>(emptyList())
@@ -33,6 +39,13 @@ class ProfileSelectViewModel @Inject constructor(
 
     val defaultDailyLimit: StateFlow<Int> = settingsRepository.defaultDailyLimit
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 60)
+
+    // All channels and playlists for assignment selection
+    val allChannels: StateFlow<List<Channel>> = channelRepository.getAllChannels()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allPlaylists: StateFlow<List<Playlist>> = playlistRepository.getAllPlaylists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -72,16 +85,39 @@ class ProfileSelectViewModel @Inject constructor(
         }
     }
 
-    fun createProfile(name: String, avatar: String, dailyLimitMinutes: Int, categoryFilters: List<String> = emptyList()) {
+    fun createProfile(
+        name: String,
+        avatar: String,
+        dailyLimitMinutes: Int,
+        categoryFilters: List<String> = emptyList(),
+        assignedChannelIds: List<String> = emptyList(),
+        assignedPlaylistIds: List<String> = emptyList()
+    ) {
         viewModelScope.launch {
-            profileRepository.createProfile(name, avatar, dailyLimitMinutes, categoryFilters)
+            val profile = profileRepository.createProfile(name, avatar, dailyLimitMinutes, categoryFilters)
+            channelRepository.setChannelsForProfile(profile.id, assignedChannelIds)
+            playlistRepository.setPlaylistsForProfile(profile.id, assignedPlaylistIds)
         }
     }
 
-    fun updateProfile(profile: Profile) {
+    fun updateProfile(
+        profile: Profile,
+        assignedChannelIds: List<String>,
+        assignedPlaylistIds: List<String>
+    ) {
         viewModelScope.launch {
             profileRepository.updateProfile(profile)
+            channelRepository.setChannelsForProfile(profile.id, assignedChannelIds)
+            playlistRepository.setPlaylistsForProfile(profile.id, assignedPlaylistIds)
         }
+    }
+
+    suspend fun getAssignedChannelIds(profileId: String): List<String> {
+        return channelRepository.getAssignedChannelIds(profileId)
+    }
+
+    suspend fun getAssignedPlaylistIds(profileId: String): List<String> {
+        return playlistRepository.getAssignedPlaylistIds(profileId)
     }
 
     fun deleteProfile(profile: Profile) {

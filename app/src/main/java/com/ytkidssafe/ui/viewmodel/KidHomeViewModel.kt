@@ -47,22 +47,24 @@ class KidHomeViewModel @Inject constructor(
     private val _timeStatus = MutableStateFlow(TimeStatus(60, 60, 0))
     val timeStatus: StateFlow<TimeStatus> = _timeStatus.asStateFlow()
 
-    // Use stateIn for channels - single source of truth
-    val channels: StateFlow<List<Channel>> = channelRepository.getAllChannels()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _profileId = MutableStateFlow<String?>(null)
 
-    // Playlists for category filtering
-    private val playlists: StateFlow<List<Playlist>> = playlistRepository.getAllPlaylists()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    // Channels filtered by profile assignment
+    private val _channels = MutableStateFlow<List<Channel>>(emptyList())
+    val channels: StateFlow<List<Channel>> = _channels.asStateFlow()
 
-    // Combine videos with category filter
+    // Playlists filtered by profile assignment
+    private val _playlists = MutableStateFlow<List<Playlist>>(emptyList())
+    val playlists: StateFlow<List<Playlist>> = _playlists.asStateFlow()
+
+    // Combine videos with category filter and profile assignment
     private val allVideos = videoRepository.getAllVideos()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val videos: StateFlow<List<Video>> = combine(
         allVideos,
-        channels,
-        playlists,
+        _channels,
+        _playlists,
         _selectedCategory
     ) { videoList, channelList, playlistList, category ->
         Log.d(TAG, "Combining: ${videoList.size} videos, ${channelList.size} channels, ${playlistList.size} playlists, category=$category")
@@ -74,6 +76,7 @@ class KidHomeViewModel @Inject constructor(
     fun loadProfile(profileId: String) {
         if (currentProfileId == profileId) return // Avoid reloading same profile
         currentProfileId = profileId
+        _profileId.value = profileId
         Log.d(TAG, "Loading profile: $profileId")
 
         viewModelScope.launch {
@@ -83,8 +86,25 @@ class KidHomeViewModel @Inject constructor(
                 _profile.value = p
                 p?.let { updateTimeStatus(it) }
                 Log.d(TAG, "Profile loaded: ${p?.name}")
+
+                // Load profile-specific channels and playlists
+                channelRepository.getChannelsForProfile(profileId).collect { channels ->
+                    _channels.value = channels
+                    Log.d(TAG, "Loaded ${channels.size} channels for profile")
+                }
             } catch (e: Exception) {
                 Log.e(TAG, "Error loading profile: ${e.message}")
+            }
+        }
+
+        viewModelScope.launch {
+            try {
+                playlistRepository.getPlaylistsForProfile(profileId).collect { playlists ->
+                    _playlists.value = playlists
+                    Log.d(TAG, "Loaded ${playlists.size} playlists for profile")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading playlists: ${e.message}")
             }
         }
     }
