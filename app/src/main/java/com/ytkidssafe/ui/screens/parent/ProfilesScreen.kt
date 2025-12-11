@@ -1,9 +1,7 @@
 package com.ytkidssafe.ui.screens.parent
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +21,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,7 +28,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -319,13 +315,11 @@ private fun ProfileDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (profile == null) "Add Profile" else "Edit Profile") },
         text = {
-            val verticalScrollState = rememberScrollState()
-            Box {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(verticalScrollState)
-                ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -336,7 +330,10 @@ private fun ProfileDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Avatar", style = MaterialTheme.typography.bodyLarge)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.height(56.dp)
+                ) {
                     items(Avatars.all) { (key, _) ->
                         ProfileAvatar(
                             avatar = key,
@@ -367,28 +364,7 @@ private fun ProfileDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Assigned Channels
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Assigned Channels", style = MaterialTheme.typography.bodyLarge)
-                    if (allChannels.size > 3) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "Swipe",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextLight
-                            )
-                            Icon(
-                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = TextLight,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
+                Text("Assigned Channels", style = MaterialTheme.typography.bodyLarge)
                 if (allChannels.isEmpty()) {
                     Text(
                         "No channels added yet",
@@ -402,46 +378,23 @@ private fun ProfileDialog(
                         color = TextLight
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    val channelScrollState = rememberLazyListState()
-                    Box {
-                        LazyRow(
-                            state = channelScrollState,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            items(allChannels) { channel ->
-                                SelectableContentItem(
-                                    thumbnailUrl = channel.thumbnailUrl,
-                                    title = channel.title,
-                                    isSelected = selectedChannelIds.contains(channel.id),
-                                    isCircle = true,
-                                    onClick = {
-                                        selectedChannelIds = if (selectedChannelIds.contains(channel.id)) {
-                                            selectedChannelIds - channel.id
-                                        } else {
-                                            selectedChannelIds + channel.id
-                                        }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
+                        items(allChannels) { channel ->
+                            SelectableContentItem(
+                                thumbnailUrl = channel.thumbnailUrl,
+                                title = channel.title,
+                                isSelected = selectedChannelIds.contains(channel.id),
+                                isCircle = true,
+                                onClick = {
+                                    selectedChannelIds = if (selectedChannelIds.contains(channel.id)) {
+                                        selectedChannelIds - channel.id
+                                    } else {
+                                        selectedChannelIds + channel.id
                                     }
-                                )
-                            }
-                        }
-                        // Fade indicator on right if more content
-                        if (channelScrollState.canScrollForward) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .width(32.dp)
-                                    .height(100.dp)
-                                    .background(
-                                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.surface,
-                                                androidx.compose.ui.graphics.Color.Transparent
-                                            ),
-                                            center = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, 50f),
-                                            radius = 150f
-                                        )
-                                    )
+                                }
                             )
                         }
                     }
@@ -450,28 +403,7 @@ private fun ProfileDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Assigned Playlists
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text("Assigned Playlists", style = MaterialTheme.typography.bodyLarge)
-                    if (allPlaylists.size > 3) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                "Swipe",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = TextLight
-                            )
-                            Icon(
-                                Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                                contentDescription = null,
-                                tint = TextLight,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        }
-                    }
-                }
+                Text("Assigned Playlists", style = MaterialTheme.typography.bodyLarge)
                 if (allPlaylists.isEmpty()) {
                     Text(
                         "No playlists imported yet",
@@ -485,69 +417,26 @@ private fun ProfileDialog(
                         color = TextLight
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    val playlistScrollState = rememberLazyListState()
-                    Box {
-                        LazyRow(
-                            state = playlistScrollState,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.height(100.dp)
-                        ) {
-                            items(allPlaylists) { playlist ->
-                                SelectableContentItem(
-                                    thumbnailUrl = playlist.thumbnailUrl,
-                                    title = playlist.title,
-                                    isSelected = selectedPlaylistIds.contains(playlist.id),
-                                    isCircle = false,
-                                    onClick = {
-                                        selectedPlaylistIds = if (selectedPlaylistIds.contains(playlist.id)) {
-                                            selectedPlaylistIds - playlist.id
-                                        } else {
-                                            selectedPlaylistIds + playlist.id
-                                        }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
+                        items(allPlaylists) { playlist ->
+                            SelectableContentItem(
+                                thumbnailUrl = playlist.thumbnailUrl,
+                                title = playlist.title,
+                                isSelected = selectedPlaylistIds.contains(playlist.id),
+                                isCircle = false,
+                                onClick = {
+                                    selectedPlaylistIds = if (selectedPlaylistIds.contains(playlist.id)) {
+                                        selectedPlaylistIds - playlist.id
+                                    } else {
+                                        selectedPlaylistIds + playlist.id
                                     }
-                                )
-                            }
-                        }
-                        // Fade indicator on right if more content
-                        if (playlistScrollState.canScrollForward) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.CenterEnd)
-                                    .width(32.dp)
-                                    .height(100.dp)
-                                    .background(
-                                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.surface,
-                                                androidx.compose.ui.graphics.Color.Transparent
-                                            ),
-                                            center = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, 50f),
-                                            radius = 150f
-                                        )
-                                    )
+                                }
                             )
                         }
                     }
-                }
-                }
-                // Vertical scroll indicator at bottom
-                if (verticalScrollState.canScrollForward) {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .height(32.dp)
-                            .background(
-                                brush = androidx.compose.ui.graphics.Brush.radialGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.surface,
-                                        androidx.compose.ui.graphics.Color.Transparent
-                                    ),
-                                    center = androidx.compose.ui.geometry.Offset(0.5f, Float.POSITIVE_INFINITY),
-                                    radius = 200f
-                                )
-                            )
-                    )
                 }
             }
         },

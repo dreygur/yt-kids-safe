@@ -41,7 +41,53 @@ Yes, really. Claude and I had a lovely chat, and now this exists. You're welcome
 
 ## Screenshots
 
-*Coming soon, once my kid stops hogging the test device*
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040337.png" width="200" alt="Profile Selection"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040434.png" width="200" alt="Kid Home"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040443.png" width="200" alt="Category Filter"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040452.png" width="200" alt="Channels"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040500.png" width="200" alt="Playlists"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040530.png" width="200" alt="Video Player"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040548.png" width="200" alt="PIN Entry"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040600.png" width="200" alt="Parent Dashboard"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040608.png" width="200" alt="Manage Profiles"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040615.png" width="200" alt="Edit Profile"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040635.png" width="200" alt="Manage Channels"/>
+</p>
+
+<p align="center">
+  <img src="screenshots/Screenshot_20251212_040648.png" width="200" alt="Settings"/>
+</p>
 
 ## Tech Stack
 
