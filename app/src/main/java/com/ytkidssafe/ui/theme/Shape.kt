@@ -5,15 +5,16 @@ import androidx.compose.material3.Shapes
 import androidx.compose.ui.unit.dp
 
 val Shapes = Shapes(
-    extraSmall = RoundedCornerShape(4.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(16.dp),  // Card radius
-    large = RoundedCornerShape(24.dp),   // Button radius
-    extraLarge = RoundedCornerShape(32.dp)
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(16.dp),
+    medium = RoundedCornerShape(24.dp),  // Card radius - YouTube Kids style
+    large = RoundedCornerShape(32.dp),   // Button radius
+    extraLarge = RoundedCornerShape(40.dp)
 )
 
-// Custom shape values
-val CardRadius = 16.dp
-val ButtonRadius = 24.dp
+// Custom shape values - YouTube Kids inspired (rounder, more playful)
+val CardRadius = 24.dp
+val ButtonRadius = 32.dp
 val AvatarRadius = 50.dp
-val ThumbnailRadius = 12.dp
+val ThumbnailRadius = 20.dp
+val BadgeRadius = 12.dp

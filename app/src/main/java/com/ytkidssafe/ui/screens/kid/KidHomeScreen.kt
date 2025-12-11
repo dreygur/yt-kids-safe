@@ -40,6 +40,7 @@ fun KidHomeScreen(
     profileId: String,
     onVideoClick: (String) -> Unit,
     onChannelsClick: () -> Unit,
+    onPlaylistsClick: () -> Unit,
     onSwitchProfile: () -> Unit,
     onParentAccess: () -> Unit,
     onTimeUp: () -> Unit,
@@ -75,6 +76,7 @@ fun KidHomeScreen(
                     when (item) {
                         NavItem.HOME -> { /* Already here */ }
                         NavItem.CHANNELS -> onChannelsClick()
+                        NavItem.PLAYLISTS -> onPlaylistsClick()
                         NavItem.PROFILE -> onSwitchProfile()
                         NavItem.SETTINGS -> { }
                     }
@@ -102,6 +104,14 @@ fun KidHomeScreen(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 TimeBar(timeStatus = timeStatus)
+
+                // Subtle hint for parents
+                Text(
+                    text = "Parent? Long-press navbar for settings",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
 
             // Category pills

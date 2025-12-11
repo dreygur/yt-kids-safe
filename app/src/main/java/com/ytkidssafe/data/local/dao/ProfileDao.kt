@@ -30,4 +30,13 @@ interface ProfileDao {
 
     @Query("UPDATE profiles SET usedTodayMinutes = 0, lastResetDate = :resetDate WHERE id = :profileId")
     suspend fun resetProfileDailyTime(profileId: String, resetDate: Long)
+
+    @Query("SELECT * FROM profiles")
+    suspend fun getAllProfilesSync(): List<ProfileEntity>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProfiles(profiles: List<ProfileEntity>)
+
+    @Query("DELETE FROM profiles")
+    suspend fun deleteAllProfiles()
 }

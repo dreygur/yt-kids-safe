@@ -5,5 +5,6 @@ data class Playlist(
     val youtubeId: String,
     val title: String,
     val thumbnailUrl: String,
-    val videoCount: Int = 0
+    val videoCount: Int = 0,
+    val category: String = "All"
 )

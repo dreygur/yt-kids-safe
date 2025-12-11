@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -24,6 +25,9 @@ class VideoPlayerViewModel @Inject constructor(
 
     private val _video = MutableStateFlow<Video?>(null)
     val video: StateFlow<Video?> = _video.asStateFlow()
+
+    private val _relatedVideos = MutableStateFlow<List<Video>>(emptyList())
+    val relatedVideos: StateFlow<List<Video>> = _relatedVideos.asStateFlow()
 
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -66,10 +70,57 @@ class VideoPlayerViewModel @Inject constructor(
             // Set YouTube ID for the native player
             videoData?.let { video ->
                 _youtubeId.value = video.youtubeId
+
+                // Load related videos - try same channel first, then all videos
+                val channelVideos = video.channelId?.let { channelId ->
+                    videoRepository.getVideosByChannel(channelId).first()
+                } ?: emptyList()
+
+                if (channelVideos.size > 1) {
+                    // Has other videos from same channel
+                    _relatedVideos.value = channelVideos
+                        .filter { it.id != videoId }
+                        .take(10)
+                } else {
+                    // Fallback: show all available videos
+                    val allVideos = videoRepository.getAllVideos().first()
+                    _relatedVideos.value = allVideos
+                        .filter { it.id != videoId }
+                        .shuffled()
+                        .take(10)
+                }
             }
 
             _isLoading.value = false
             startTracking()
+        }
+    }
+
+    fun playVideo(video: Video) {
+        currentProfileId?.let {
+            _video.value = video
+            _youtubeId.value = video.youtubeId
+            elapsedSeconds = 0
+            lastSavedMinute = 0
+
+            // Update related videos
+            viewModelScope.launch {
+                val channelVideos = video.channelId?.let { channelId ->
+                    videoRepository.getVideosByChannel(channelId).first()
+                } ?: emptyList()
+
+                if (channelVideos.size > 1) {
+                    _relatedVideos.value = channelVideos
+                        .filter { it.id != video.id }
+                        .take(10)
+                } else {
+                    val allVideos = videoRepository.getAllVideos().first()
+                    _relatedVideos.value = allVideos
+                        .filter { it.id != video.id }
+                        .shuffled()
+                        .take(10)
+                }
+            }
         }
     }
 

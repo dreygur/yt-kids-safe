@@ -23,7 +23,10 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -169,8 +172,8 @@ fun ChannelsScreen(
     if (showAddDialog) {
         AddChannelDialog(
             onDismiss = { showAddDialog = false },
-            onAdd = { url ->
-                viewModel.addChannelFromUrl(url)
+            onAdd = { url, category ->
+                viewModel.addChannelFromUrl(url, category)
                 showAddDialog = false
             }
         )
@@ -243,12 +246,16 @@ private fun ChannelCard(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddChannelDialog(
     onDismiss: () -> Unit,
-    onAdd: (String) -> Unit
+    onAdd: (String, String) -> Unit
 ) {
     var url by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("All") }
+    var expanded by remember { mutableStateOf(false) }
+    val categories = listOf("All", "Cartoons", "Learning", "Music", "Stories")
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -268,11 +275,46 @@ private fun AddChannelDialog(
                     placeholder = { Text("youtube.com/@channelname") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Category",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = selectedCategory,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor()
+                    )
+                    ExposedDropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        categories.forEach { category ->
+                            DropdownMenuItem(
+                                text = { Text(category) },
+                                onClick = {
+                                    selectedCategory = category
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onAdd(url) },
+                onClick = { onAdd(url, selectedCategory) },
                 enabled = url.isNotBlank()
             ) {
                 Text("Add")

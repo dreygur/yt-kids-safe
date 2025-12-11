@@ -39,13 +39,13 @@ class ChannelManageViewModel @Inject constructor(
     private val _successMessage = MutableStateFlow<String?>(null)
     val successMessage: StateFlow<String?> = _successMessage.asStateFlow()
 
-    fun addChannelFromUrl(url: String) {
+    fun addChannelFromUrl(url: String, category: String = "All") {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
             _successMessage.value = null
 
-            Log.d(TAG, "Adding channel from URL: $url")
+            Log.d(TAG, "Adding channel from URL: $url with category: $category")
 
             val channelId = parseYoutubeChannelId(url)
             Log.d(TAG, "Parsed channel ID: $channelId")
@@ -60,7 +60,7 @@ class ChannelManageViewModel @Inject constructor(
                             youtubeId = channelInfo.id.ifEmpty { channelId },
                             title = channelInfo.name,
                             thumbnailUrl = channelInfo.thumbnailUrl,
-                            category = "All"
+                            category = category
                         )
                         Log.d(TAG, "Channel saved with internal ID: ${channel.id}")
 

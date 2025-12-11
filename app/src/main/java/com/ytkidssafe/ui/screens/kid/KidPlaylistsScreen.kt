@@ -25,28 +25,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ytkidssafe.ui.components.BottomNavBar
-import com.ytkidssafe.ui.components.ChannelTile
 import com.ytkidssafe.ui.components.NavItem
 import com.ytkidssafe.ui.components.PinDialog
+import com.ytkidssafe.ui.components.PlaylistTile
 import com.ytkidssafe.ui.components.TimeBar
 import com.ytkidssafe.ui.theme.Background
-import com.ytkidssafe.ui.viewmodel.KidHomeViewModel
+import com.ytkidssafe.ui.viewmodel.KidPlaylistsViewModel
 
 @Composable
-fun KidChannelsScreen(
+fun KidPlaylistsScreen(
     profileId: String,
-    onChannelClick: (String) -> Unit,
+    onPlaylistClick: (String) -> Unit,
     onHomeClick: () -> Unit,
-    onPlaylistsClick: () -> Unit,
+    onChannelsClick: () -> Unit,
     onSwitchProfile: () -> Unit,
     onParentAccess: () -> Unit,
-    viewModel: KidHomeViewModel = hiltViewModel()
+    viewModel: KidPlaylistsViewModel = hiltViewModel()
 ) {
     val profile by viewModel.profile.collectAsState()
-    val channels by viewModel.channels.collectAsState()
+    val playlists by viewModel.playlists.collectAsState()
     val timeStatus by viewModel.timeStatus.collectAsState()
 
-    var currentNav by remember { mutableStateOf(NavItem.CHANNELS) }
+    var currentNav by remember { mutableStateOf(NavItem.PLAYLISTS) }
     var showPinDialog by remember { mutableStateOf(false) }
     var pinError by remember { mutableStateOf<String?>(null) }
 
@@ -63,8 +63,8 @@ fun KidChannelsScreen(
                     currentNav = item
                     when (item) {
                         NavItem.HOME -> onHomeClick()
-                        NavItem.CHANNELS -> { /* Already here */ }
-                        NavItem.PLAYLISTS -> onPlaylistsClick()
+                        NavItem.CHANNELS -> onChannelsClick()
+                        NavItem.PLAYLISTS -> { /* Already here */ }
                         NavItem.PROFILE -> onSwitchProfile()
                         NavItem.SETTINGS -> { }
                     }
@@ -85,7 +85,7 @@ fun KidChannelsScreen(
                     .padding(16.dp)
             ) {
                 Text(
-                    text = "Channels",
+                    text = "Playlists",
                     style = MaterialTheme.typography.headlineMedium
                 )
 
@@ -94,18 +94,18 @@ fun KidChannelsScreen(
                 TimeBar(timeStatus = timeStatus)
             }
 
-            // Channels grid
+            // Playlists grid
             LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
+                columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
-                items(channels) { channel ->
-                    ChannelTile(
-                        channel = channel,
-                        onClick = { onChannelClick(channel.id) }
+                items(playlists) { playlist ->
+                    PlaylistTile(
+                        playlist = playlist,
+                        onClick = { onPlaylistClick(playlist.id) }
                     )
                 }
             }

@@ -104,11 +104,13 @@ class YouTubeService @Inject constructor() {
         Log.d(TAG, "Fetching channel: $channelIdOrHandle")
 
         try {
-            // Step 1: Resolve to channel ID if needed
-            val channelId = if (channelIdOrHandle.startsWith("UC") && channelIdOrHandle.length >= 24) {
-                channelIdOrHandle
+            // Step 1: Resolve to channel ID and get thumbnail if needed
+            val (channelId, thumbnailUrl) = if (channelIdOrHandle.startsWith("UC") && channelIdOrHandle.length >= 24) {
+                // Direct channel ID - fetch thumbnail from channel page
+                val thumb = fetchChannelThumbnail("https://www.youtube.com/channel/$channelIdOrHandle")
+                Pair(channelIdOrHandle, thumb)
             } else {
-                resolveHandleToChannelId(channelIdOrHandle)
+                resolveHandleToChannelIdWithThumbnail(channelIdOrHandle)
             }
 
             if (channelId == null) {
@@ -116,7 +118,7 @@ class YouTubeService @Inject constructor() {
                 return@withContext Result.failure(Exception("Could not find channel. Try using a direct channel ID (UCxxxxx)."))
             }
 
-            Log.d(TAG, "Resolved channel ID: $channelId")
+            Log.d(TAG, "Resolved channel ID: $channelId, thumbnail: $thumbnailUrl")
 
             // Step 2: Fetch videos via RSS
             val rssUrl = URL("$RSS_BASE?channel_id=$channelId")
@@ -130,10 +132,15 @@ class YouTubeService @Inject constructor() {
             val (channelName, videos) = parseChannelRssFeed(response)
             Log.d(TAG, "Channel fetched: $channelName with ${videos.size} videos")
 
+            // Use first video thumbnail as fallback if no channel thumbnail
+            val finalThumbnail = thumbnailUrl.ifEmpty {
+                videos.firstOrNull()?.thumbnailUrl ?: ""
+            }
+
             Result.success(ChannelInfo(
                 id = channelId,
                 name = channelName,
-                thumbnailUrl = "", // RSS doesn't provide channel thumbnail
+                thumbnailUrl = finalThumbnail,
                 videos = videos
             ))
         } catch (e: Exception) {
@@ -174,30 +181,79 @@ class YouTubeService @Inject constructor() {
     }
 
     /**
-     * Resolve a handle (@username or username) to a channel ID.
-     * Uses YouTube's channel page to extract the channel ID.
+     * Resolve a handle (@username or username) to a channel ID and thumbnail.
+     * Uses YouTube's channel page to extract both.
      */
-    private fun resolveHandleToChannelId(handle: String): String? {
+    private fun resolveHandleToChannelIdWithThumbnail(handle: String): Pair<String?, String> {
         val cleanHandle = handle.removePrefix("@").trim()
         Log.d(TAG, "Resolving handle: $cleanHandle")
 
         // Try @handle format first
         val handleUrl = "https://www.youtube.com/@$cleanHandle"
-        val channelId = extractChannelIdFromPage(handleUrl)
+        val (channelId, thumbnail) = extractChannelIdAndThumbnailFromPage(handleUrl)
 
         if (channelId != null) {
-            return channelId
+            return Pair(channelId, thumbnail)
         }
 
         // Try /c/ format
         val cUrl = "https://www.youtube.com/c/$cleanHandle"
-        return extractChannelIdFromPage(cUrl)
+        return extractChannelIdAndThumbnailFromPage(cUrl)
     }
 
     /**
-     * Extract channel ID from a YouTube page by looking for canonical URL or channel ID in HTML
+     * Fetch channel thumbnail from a channel page URL
      */
-    private fun extractChannelIdFromPage(pageUrl: String): String? {
+    private fun fetchChannelThumbnail(pageUrl: String): String {
+        return try {
+            val url = URL(pageUrl)
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "GET"
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
+            connection.setRequestProperty("User-Agent", "Mozilla/5.0")
+            connection.instanceFollowRedirects = true
+
+            if (connection.responseCode != 200) {
+                return ""
+            }
+
+            val response = connection.inputStream.bufferedReader().readText()
+            extractThumbnailFromHtml(response)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error fetching thumbnail: ${e.message}")
+            ""
+        }
+    }
+
+    /**
+     * Extract thumbnail URL from HTML response
+     */
+    private fun extractThumbnailFromHtml(html: String): String {
+        val patterns = listOf(
+            // Avatar image patterns
+            Regex("\"avatar\":\\{\"thumbnails\":\\[\\{\"url\":\"([^\"]+)\""),
+            Regex("\"thumbnails\":\\[\\{\"url\":\"(https://yt3[^\"]+)\""),
+            Regex("og:image\" content=\"([^\"]+)\""),
+            Regex("\"channelAvatarData\"[^}]*\"url\":\"([^\"]+)\"")
+        )
+
+        for (pattern in patterns) {
+            pattern.find(html)?.let { match ->
+                val url = match.groupValues[1]
+                    .replace("\\u0026", "&")
+                    .replace("\\/", "/")
+                Log.d(TAG, "Found thumbnail: $url")
+                return url
+            }
+        }
+        return ""
+    }
+
+    /**
+     * Extract channel ID and thumbnail from a YouTube page
+     */
+    private fun extractChannelIdAndThumbnailFromPage(pageUrl: String): Pair<String?, String> {
         try {
             val url = URL(pageUrl)
             val connection = url.openConnection() as HttpURLConnection
@@ -209,36 +265,35 @@ class YouTubeService @Inject constructor() {
 
             if (connection.responseCode != 200) {
                 Log.w(TAG, "Page fetch failed: ${connection.responseCode}")
-                return null
+                return Pair(null, "")
             }
 
             val response = connection.inputStream.bufferedReader().readText()
 
             // Look for channel ID in various places
-            val patterns = listOf(
-                // Canonical URL pattern
+            val idPatterns = listOf(
                 Regex("\"channelId\":\"(UC[a-zA-Z0-9_-]{22})\""),
-                // External ID pattern
                 Regex("\"externalId\":\"(UC[a-zA-Z0-9_-]{22})\""),
-                // Browse ID pattern
                 Regex("\"browseId\":\"(UC[a-zA-Z0-9_-]{22})\""),
-                // URL pattern in meta tags
                 Regex("channel/(UC[a-zA-Z0-9_-]{22})")
             )
 
-            for (pattern in patterns) {
+            var channelId: String? = null
+            for (pattern in idPatterns) {
                 pattern.find(response)?.let { match ->
-                    val channelId = match.groupValues[1]
+                    channelId = match.groupValues[1]
                     Log.d(TAG, "Found channel ID via pattern: $channelId")
-                    return channelId
                 }
+                if (channelId != null) break
             }
 
-            Log.w(TAG, "No channel ID found in page")
-            return null
+            // Extract thumbnail
+            val thumbnail = extractThumbnailFromHtml(response)
+
+            return Pair(channelId, thumbnail)
         } catch (e: Exception) {
-            Log.e(TAG, "Error extracting channel ID: ${e.message}")
-            return null
+            Log.e(TAG, "Error extracting channel info: ${e.message}")
+            return Pair(null, "")
         }
     }
 

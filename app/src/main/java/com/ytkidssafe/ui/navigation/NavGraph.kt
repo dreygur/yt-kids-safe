@@ -9,7 +9,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ytkidssafe.ui.screens.ProfileSelectScreen
 import com.ytkidssafe.ui.screens.kid.KidChannelsScreen
+import com.ytkidssafe.ui.screens.kid.KidChannelVideosScreen
 import com.ytkidssafe.ui.screens.kid.KidHomeScreen
+import com.ytkidssafe.ui.screens.kid.KidPlaylistsScreen
+import com.ytkidssafe.ui.screens.kid.KidPlaylistVideosScreen
 import com.ytkidssafe.ui.screens.kid.TimesUpScreen
 import com.ytkidssafe.ui.screens.kid.VideoPlayerScreen
 import com.ytkidssafe.ui.screens.parent.ChannelsScreen
@@ -19,9 +22,13 @@ import com.ytkidssafe.ui.screens.parent.ProfilesScreen
 import com.ytkidssafe.ui.screens.parent.SettingsScreen
 
 object Routes {
-    const val PROFILE_SELECT = "profile_select"
+    const val PROFILE_SELECT = "profile_select?autoSkip={autoSkip}"
+    const val PROFILE_SELECT_MANUAL = "profile_select?autoSkip=false"
     const val KID_HOME = "kid_home/{profileId}"
     const val KID_CHANNELS = "kid_channels/{profileId}"
+    const val KID_CHANNEL_VIDEOS = "kid_channel_videos/{profileId}/{channelId}"
+    const val KID_PLAYLISTS = "kid_playlists/{profileId}"
+    const val KID_PLAYLIST_VIDEOS = "kid_playlist_videos/{profileId}/{playlistId}"
     const val VIDEO_PLAYER = "video_player/{profileId}/{videoId}"
     const val TIMES_UP = "times_up/{profileId}"
     const val PARENT_DASHBOARD = "parent_dashboard"
@@ -32,6 +39,9 @@ object Routes {
 
     fun kidHome(profileId: String) = "kid_home/$profileId"
     fun kidChannels(profileId: String) = "kid_channels/$profileId"
+    fun kidChannelVideos(profileId: String, channelId: String) = "kid_channel_videos/$profileId/$channelId"
+    fun kidPlaylists(profileId: String) = "kid_playlists/$profileId"
+    fun kidPlaylistVideos(profileId: String, playlistId: String) = "kid_playlist_videos/$profileId/$playlistId"
     fun videoPlayer(profileId: String, videoId: String) = "video_player/$profileId/$videoId"
     fun timesUp(profileId: String) = "times_up/$profileId"
 }
@@ -39,23 +49,33 @@ object Routes {
 @Composable
 fun NavGraph(
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Routes.PROFILE_SELECT
+    startDestination: String = "profile_select?autoSkip=true"
 ) {
     NavHost(
         navController = navController,
         startDestination = startDestination
     ) {
         // Profile Selection
-        composable(Routes.PROFILE_SELECT) {
+        composable(
+            route = Routes.PROFILE_SELECT,
+            arguments = listOf(
+                navArgument("autoSkip") {
+                    type = NavType.BoolType
+                    defaultValue = true
+                }
+            )
+        ) { backStackEntry ->
+            val autoSkip = backStackEntry.arguments?.getBoolean("autoSkip") ?: true
             ProfileSelectScreen(
                 onProfileSelected = { profileId ->
                     navController.navigate(Routes.kidHome(profileId)) {
-                        popUpTo(Routes.PROFILE_SELECT)
+                        popUpTo("profile_select?autoSkip=true") { inclusive = true }
                     }
                 },
                 onParentAccess = {
                     navController.navigate(Routes.PARENT_DASHBOARD)
-                }
+                },
+                autoSkipIfSingle = autoSkip
             )
         }
 
@@ -73,9 +93,12 @@ fun NavGraph(
                 onChannelsClick = {
                     navController.navigate(Routes.kidChannels(profileId))
                 },
+                onPlaylistsClick = {
+                    navController.navigate(Routes.kidPlaylists(profileId))
+                },
                 onSwitchProfile = {
-                    navController.navigate(Routes.PROFILE_SELECT) {
-                        popUpTo(Routes.PROFILE_SELECT) { inclusive = true }
+                    navController.navigate(Routes.PROFILE_SELECT_MANUAL) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onParentAccess = {
@@ -98,21 +121,98 @@ fun NavGraph(
             KidChannelsScreen(
                 profileId = profileId,
                 onChannelClick = { channelId ->
-                    // TODO: Filter videos by channel
+                    navController.navigate(Routes.kidChannelVideos(profileId, channelId))
                 },
                 onHomeClick = {
                     navController.navigate(Routes.kidHome(profileId)) {
                         popUpTo(Routes.kidHome(profileId)) { inclusive = true }
                     }
                 },
+                onPlaylistsClick = {
+                    navController.navigate(Routes.kidPlaylists(profileId)) {
+                        popUpTo(Routes.kidHome(profileId))
+                    }
+                },
                 onSwitchProfile = {
-                    navController.navigate(Routes.PROFILE_SELECT) {
-                        popUpTo(Routes.PROFILE_SELECT) { inclusive = true }
+                    navController.navigate(Routes.PROFILE_SELECT_MANUAL) {
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onParentAccess = {
                     navController.navigate(Routes.PARENT_DASHBOARD)
                 }
+            )
+        }
+
+        // Kid Channel Videos
+        composable(
+            route = Routes.KID_CHANNEL_VIDEOS,
+            arguments = listOf(
+                navArgument("profileId") { type = NavType.StringType },
+                navArgument("channelId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
+            val channelId = backStackEntry.arguments?.getString("channelId") ?: return@composable
+            KidChannelVideosScreen(
+                profileId = profileId,
+                channelId = channelId,
+                onVideoClick = { videoId ->
+                    navController.navigate(Routes.videoPlayer(profileId, videoId))
+                },
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // Kid Playlists
+        composable(
+            route = Routes.KID_PLAYLISTS,
+            arguments = listOf(navArgument("profileId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
+            KidPlaylistsScreen(
+                profileId = profileId,
+                onPlaylistClick = { playlistId ->
+                    navController.navigate(Routes.kidPlaylistVideos(profileId, playlistId))
+                },
+                onHomeClick = {
+                    navController.navigate(Routes.kidHome(profileId)) {
+                        popUpTo(Routes.kidHome(profileId)) { inclusive = true }
+                    }
+                },
+                onChannelsClick = {
+                    navController.navigate(Routes.kidChannels(profileId)) {
+                        popUpTo(Routes.kidHome(profileId))
+                    }
+                },
+                onSwitchProfile = {
+                    navController.navigate(Routes.PROFILE_SELECT_MANUAL) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+                onParentAccess = {
+                    navController.navigate(Routes.PARENT_DASHBOARD)
+                }
+            )
+        }
+
+        // Kid Playlist Videos
+        composable(
+            route = Routes.KID_PLAYLIST_VIDEOS,
+            arguments = listOf(
+                navArgument("profileId") { type = NavType.StringType },
+                navArgument("playlistId") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val profileId = backStackEntry.arguments?.getString("profileId") ?: return@composable
+            val playlistId = backStackEntry.arguments?.getString("playlistId") ?: return@composable
+            KidPlaylistVideosScreen(
+                profileId = profileId,
+                playlistId = playlistId,
+                onVideoClick = { videoId ->
+                    navController.navigate(Routes.videoPlayer(profileId, videoId))
+                },
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -148,12 +248,12 @@ fun NavGraph(
                 profileId = profileId,
                 onParentOverride = {
                     navController.navigate(Routes.kidHome(profileId)) {
-                        popUpTo(Routes.PROFILE_SELECT)
+                        popUpTo(0) { inclusive = true }
                     }
                 },
                 onSwitchProfile = {
-                    navController.navigate(Routes.PROFILE_SELECT) {
-                        popUpTo(Routes.PROFILE_SELECT) { inclusive = true }
+                    navController.navigate(Routes.PROFILE_SELECT_MANUAL) {
+                        popUpTo(0) { inclusive = true }
                     }
                 }
             )

@@ -2,20 +2,20 @@ package com.ytkidssafe.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Soft Pastel Palette
-val Primary = Color(0xFF7EC8E3)
-val PrimaryVariant = Color(0xFF5BA8C3)
-val Secondary = Color(0xFFFF9999)
-val SecondaryVariant = Color(0xFFE07777)
-val Background = Color(0xFFFFF9E6)
-val Surface = Color(0xFFFFFFFF)
-val Accent1 = Color(0xFF98D89E)  // Success/Green
-val Accent2 = Color(0xFFFFD166)  // Warning/Yellow
-val TextPrimary = Color(0xFF4A4A4A)
-val TextLight = Color(0xFF7A7A7A)
-val Error = Color(0xFFE57373)
+// Catppuccin Macchiato Palette
+val Primary = Color(0xFFC6A0F6)        // Mauve
+val PrimaryVariant = Color(0xFFB7BDF8) // Lavender
+val Secondary = Color(0xFFF5BDE6)      // Pink
+val SecondaryVariant = Color(0xFFF0C6C6) // Flamingo
+val Background = Color(0xFF24273A)     // Base
+val Surface = Color(0xFF363A4F)        // Surface0
+val Accent1 = Color(0xFFA6DA95)        // Green
+val Accent2 = Color(0xFFEED49F)        // Yellow
+val TextPrimary = Color(0xFFCAD3F5)    // Text
+val TextLight = Color(0xFFA5ADCB)      // Subtext0
+val Error = Color(0xFFED8796)          // Red
 
 // Additional colors for UI elements
-val CardBackground = Color(0xFFFFFFFF)
-val DividerColor = Color(0xFFE0E0E0)
-val OverlayDark = Color(0x80000000)
+val CardBackground = Color(0xFF494D64) // Surface1
+val DividerColor = Color(0xFF6E738D)   // Overlay0
+val OverlayDark = Color(0xCC181926)    // Crust with alpha

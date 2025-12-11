@@ -38,7 +38,8 @@ class PlaylistRepository @Inject constructor(
         youtubeId: String,
         title: String,
         thumbnailUrl: String,
-        videoCount: Int = 0
+        videoCount: Int = 0,
+        category: String = "All"
     ): Playlist {
         val existing = playlistDao.getPlaylistByYoutubeId(youtubeId)
         if (existing != null) {
@@ -50,7 +51,8 @@ class PlaylistRepository @Inject constructor(
             youtubeId = youtubeId,
             title = title,
             thumbnailUrl = thumbnailUrl,
-            videoCount = videoCount
+            videoCount = videoCount,
+            category = category
         )
         playlistDao.insertPlaylist(entity)
         return entity.toDomain()
@@ -76,7 +78,8 @@ class PlaylistRepository @Inject constructor(
             youtubeId = youtubeId,
             title = title,
             thumbnailUrl = thumbnailUrl,
-            videoCount = videoCount
+            videoCount = videoCount,
+            category = category
         )
     }
 
@@ -86,7 +89,8 @@ class PlaylistRepository @Inject constructor(
             youtubeId = youtubeId,
             title = title,
             thumbnailUrl = thumbnailUrl,
-            videoCount = videoCount
+            videoCount = videoCount,
+            category = category
         )
     }
 }

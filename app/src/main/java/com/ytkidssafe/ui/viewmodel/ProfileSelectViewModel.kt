@@ -22,8 +22,11 @@ class ProfileSelectViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : ViewModel() {
 
-    val profiles: StateFlow<List<Profile>> = profileRepository.getAllProfiles()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    private val _profiles = MutableStateFlow<List<Profile>>(emptyList())
+    val profiles: StateFlow<List<Profile>> = _profiles.asStateFlow()
+
+    private val _isLoaded = MutableStateFlow(false)
+    val isLoaded: StateFlow<Boolean> = _isLoaded.asStateFlow()
 
     private val _isPinSet = MutableStateFlow(false)
     val isPinSet: StateFlow<Boolean> = _isPinSet.asStateFlow()
@@ -34,6 +37,12 @@ class ProfileSelectViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             _isPinSet.value = settingsRepository.isPinSet()
+        }
+        viewModelScope.launch {
+            profileRepository.getAllProfiles().collect { profileList ->
+                _profiles.value = profileList
+                _isLoaded.value = true
+            }
         }
     }
 

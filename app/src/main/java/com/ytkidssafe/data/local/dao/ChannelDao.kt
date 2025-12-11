@@ -39,4 +39,22 @@ interface ChannelDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM profile_channel_cross_ref WHERE profileId = :profileId AND channelId = :channelId)")
     suspend fun isChannelAssignedToProfile(profileId: String, channelId: String): Boolean
+
+    @Query("SELECT * FROM channels")
+    suspend fun getAllChannelsSync(): List<ChannelEntity>
+
+    @Query("SELECT * FROM profile_channel_cross_ref")
+    suspend fun getAllProfileChannelRefs(): List<ProfileChannelCrossRef>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertChannels(channels: List<ChannelEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProfileChannelRefs(refs: List<ProfileChannelCrossRef>)
+
+    @Query("DELETE FROM channels")
+    suspend fun deleteAllChannels()
+
+    @Query("DELETE FROM profile_channel_cross_ref")
+    suspend fun deleteAllProfileChannelRefs()
 }

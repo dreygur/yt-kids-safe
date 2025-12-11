@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,12 +45,26 @@ import com.ytkidssafe.ui.viewmodel.ProfileSelectViewModel
 fun ProfileSelectScreen(
     onProfileSelected: (String) -> Unit,
     onParentAccess: () -> Unit,
+    autoSkipIfSingle: Boolean = true,
     viewModel: ProfileSelectViewModel = hiltViewModel()
 ) {
     val profiles by viewModel.profiles.collectAsState()
     val isPinSet by viewModel.isPinSet.collectAsState()
+    val isLoaded by viewModel.isLoaded.collectAsState()
     var showPinDialog by remember { mutableStateOf(false) }
     var pinError by remember { mutableStateOf<String?>(null) }
+
+    // Auto-navigate to home if only one profile exists (only on initial launch)
+    LaunchedEffect(isLoaded, profiles) {
+        if (autoSkipIfSingle && isLoaded && profiles.size == 1) {
+            onProfileSelected(profiles.first().id)
+        }
+    }
+
+    // Don't show UI while checking or if auto-navigating
+    if (!isLoaded || (autoSkipIfSingle && profiles.size == 1)) {
+        return
+    }
 
     Scaffold(
         containerColor = Background

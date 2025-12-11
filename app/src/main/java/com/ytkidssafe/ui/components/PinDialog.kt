@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,13 @@ fun PinDialog(
     var confirmPin by remember { mutableStateOf("") }
     var isConfirming by remember { mutableStateOf(false) }
 
+    // Reset PIN when error occurs (wrong PIN entered)
+    LaunchedEffect(error) {
+        if (error != null) {
+            pin = ""
+        }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -63,24 +71,24 @@ fun PinDialog(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                // PIN dots
+                // PIN dots - larger for better visibility
                 Row(
                     horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.padding(vertical = 16.dp)
+                    modifier = Modifier.padding(vertical = 20.dp)
                 ) {
                     val currentPin = if (isConfirming) confirmPin else pin
                     repeat(4) { index ->
                         Box(
                             modifier = Modifier
-                                .size(16.dp)
+                                .size(20.dp)
                                 .clip(CircleShape)
                                 .background(
                                     if (index < currentPin.length) Primary
                                     else Surface
                                 )
-                                .border(1.dp, Primary, CircleShape)
+                                .border(2.dp, Primary, CircleShape)
                         )
-                        if (index < 3) Spacer(modifier = Modifier.width(16.dp))
+                        if (index < 3) Spacer(modifier = Modifier.width(20.dp))
                     }
                 }
 
@@ -147,9 +155,11 @@ private fun NumberPad(
     onNumberClick: (String) -> Unit,
     onBackspace: () -> Unit
 ) {
+    val buttonSize = 72.dp // Larger buttons for kids
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         listOf(
             listOf("1", "2", "3"),
@@ -158,20 +168,25 @@ private fun NumberPad(
             listOf("", "0", "⌫")
         ).forEach { row ->
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 row.forEach { key ->
                     when (key) {
-                        "" -> Spacer(modifier = Modifier.size(64.dp))
+                        "" -> Spacer(modifier = Modifier.size(buttonSize))
                         "⌫" -> {
-                            IconButton(
-                                onClick = onBackspace,
-                                modifier = Modifier.size(64.dp)
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier
+                                    .size(buttonSize)
+                                    .clip(CircleShape)
+                                    .background(Surface)
+                                    .clickable { onBackspace() }
                             ) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.Backspace,
                                     contentDescription = "Backspace",
-                                    tint = TextPrimary
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
@@ -179,15 +194,15 @@ private fun NumberPad(
                             Box(
                                 contentAlignment = Alignment.Center,
                                 modifier = Modifier
-                                    .size(64.dp)
+                                    .size(buttonSize)
                                     .clip(CircleShape)
                                     .background(Surface)
-                                    .border(1.dp, Primary.copy(alpha = 0.3f), CircleShape)
+                                    .border(2.dp, Primary.copy(alpha = 0.3f), CircleShape)
                                     .clickable { onNumberClick(key) }
                             ) {
                                 Text(
                                     text = key,
-                                    fontSize = 24.sp,
+                                    fontSize = 28.sp,
                                     color = TextPrimary
                                 )
                             }

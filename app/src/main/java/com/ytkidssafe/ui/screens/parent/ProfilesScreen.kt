@@ -29,7 +29,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -37,10 +36,11 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,6 +60,7 @@ fun ProfilesScreen(
     viewModel: ProfileSelectViewModel = hiltViewModel()
 ) {
     val profiles by viewModel.profiles.collectAsState()
+    val defaultDailyLimit by viewModel.defaultDailyLimit.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingProfile by remember { mutableStateOf<Profile?>(null) }
     var deleteProfile by remember { mutableStateOf<Profile?>(null) }
@@ -107,6 +108,7 @@ fun ProfilesScreen(
     if (showAddDialog || editingProfile != null) {
         ProfileDialog(
             profile = editingProfile,
+            defaultDailyLimit = defaultDailyLimit,
             onDismiss = {
                 showAddDialog = false
                 editingProfile = null
@@ -198,12 +200,15 @@ private fun ProfileCard(
 @Composable
 private fun ProfileDialog(
     profile: Profile?,
+    defaultDailyLimit: Int,
     onDismiss: () -> Unit,
     onSave: (String, String, Int) -> Unit
 ) {
     var name by remember { mutableStateOf(profile?.name ?: "") }
     var selectedAvatar by remember { mutableStateOf(profile?.avatar ?: "bear") }
-    var dailyLimit by remember { mutableFloatStateOf(profile?.dailyLimitMinutes?.toFloat() ?: 60f) }
+    var dailyLimitText by remember {
+        mutableStateOf((profile?.dailyLimitMinutes ?: defaultDailyLimit).toString())
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -234,19 +239,29 @@ private fun ProfileDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Text("Daily Limit: ${dailyLimit.toInt()} minutes")
-                Slider(
-                    value = dailyLimit,
-                    onValueChange = { dailyLimit = it },
-                    valueRange = 15f..180f,
-                    steps = 10
+                OutlinedTextField(
+                    value = dailyLimitText,
+                    onValueChange = { input ->
+                        // Only allow digits, max 1440
+                        val filtered = input.filter { it.isDigit() }
+                        val value = filtered.toIntOrNull() ?: 0
+                        dailyLimitText = if (value > 1440) "1440" else filtered
+                    },
+                    label = { Text("Daily Limit (minutes)") },
+                    supportingText = { Text("Max: 1440 minutes (24 hours)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
             Button(
-                onClick = { onSave(name, selectedAvatar, dailyLimit.toInt()) },
-                enabled = name.isNotBlank()
+                onClick = {
+                    val limit = dailyLimitText.toIntOrNull()?.coerceIn(1, 1440) ?: defaultDailyLimit
+                    onSave(name, selectedAvatar, limit)
+                },
+                enabled = name.isNotBlank() && dailyLimitText.isNotBlank()
             ) {
                 Text("Save")
             }

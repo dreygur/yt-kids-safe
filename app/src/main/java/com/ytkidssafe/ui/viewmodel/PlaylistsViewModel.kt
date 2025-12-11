@@ -34,7 +34,7 @@ class PlaylistsViewModel @Inject constructor(
     private val _importSuccess = MutableStateFlow(false)
     val importSuccess: StateFlow<Boolean> = _importSuccess.asStateFlow()
 
-    fun importPlaylist(url: String) {
+    fun importPlaylist(url: String, category: String = "All") {
         val ytPlaylistId = youTubeService.parsePlaylistId(url)
         if (ytPlaylistId == null) {
             _error.value = "Invalid playlist URL"
@@ -52,7 +52,8 @@ class PlaylistsViewModel @Inject constructor(
                         youtubeId = playlistInfo.id,
                         title = playlistInfo.title,
                         thumbnailUrl = playlistInfo.thumbnailUrl,
-                        videoCount = playlistInfo.videoCount
+                        videoCount = playlistInfo.videoCount,
+                        category = category
                     )
 
                     // Save videos linked to this playlist

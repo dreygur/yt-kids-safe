@@ -10,7 +10,8 @@ data class PlaylistEntity(
     val youtubeId: String,
     val title: String,
     val thumbnailUrl: String,
-    val videoCount: Int = 0
+    val videoCount: Int = 0,
+    val category: String = "All"
 )
 
 @Entity(tableName = "profile_playlist_cross_ref", primaryKeys = ["profileId", "playlistId"])
