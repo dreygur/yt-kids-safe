@@ -39,6 +39,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MergingMediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
+import com.ytkidssafe.R
 import com.ytkidssafe.domain.model.TimeStatus
 import com.ytkidssafe.video.extractor.StreamExtractor
 import kotlinx.coroutines.Dispatchers
@@ -184,10 +185,11 @@ fun KidsVideoPlayer(
                                 ViewGroup.LayoutParams.MATCH_PARENT
                             )
                             useController = true
+                            controllerLayoutId = R.layout.custom_exo_player_control_view
                             setShowNextButton(false)
                             setShowPreviousButton(false)
-                            setShowFastForwardButton(false)
-                            setShowRewindButton(false)
+                            setShowFastForwardButton(true)
+                            setShowRewindButton(true)
                             controllerShowTimeoutMs = 3000
                             setControllerVisibilityListener(
                                 PlayerView.ControllerVisibilityListener { visibility ->
