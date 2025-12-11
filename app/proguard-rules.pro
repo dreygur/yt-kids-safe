@@ -31,11 +31,37 @@
 }
 
 # Rhino JavaScript Engine (used by NewPipe extractor)
--dontwarn java.beans.**
--dontwarn javax.script.**
--dontwarn org.mozilla.javascript.**
--keep class org.mozilla.javascript.** { *; }
+-keep class org.mozilla.** { *; }
+-keepclassmembers class org.mozilla.** { *; }
+-dontwarn org.mozilla.**
 
-# Missing desktop Java classes not available on Android
+# NewPipe Extractor
+-keep class org.schabi.newpipe.extractor.** { *; }
+-keepclassmembers class org.schabi.newpipe.extractor.** { *; }
+-dontwarn org.schabi.newpipe.extractor.**
+
+# Missing Java SE classes not available on Android
+-dontwarn java.beans.**
 -dontwarn java.awt.**
 -dontwarn javax.swing.**
+-dontwarn javax.script.**
+-dontwarn javax.naming.**
+-dontwarn sun.misc.**
+
+# OkHttp / Okio
+-dontwarn okhttp3.**
+-dontwarn okio.**
+-keep class okhttp3.** { *; }
+-keep class okio.** { *; }
+
+# Jsoup
+-keep class org.jsoup.** { *; }
+-dontwarn org.jsoup.**
+
+# Keep all annotations
+-keepattributes *Annotation*
+-keepattributes Signature
+-keepattributes Exceptions
+
+# Ignore all missing class warnings for R8
+-ignorewarnings
