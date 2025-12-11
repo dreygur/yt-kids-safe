@@ -98,4 +98,12 @@ class AppPreferences @Inject constructor(
             prefs[CUSTOM_CATEGORIES] = current.filter { it != category }.joinToString(",")
         }
     }
+
+    suspend fun renameCategory(oldName: String, newName: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[CUSTOM_CATEGORIES]?.split(",")?.filter { it.isNotBlank() }
+                ?: DEFAULT_CATEGORIES
+            prefs[CUSTOM_CATEGORIES] = current.map { if (it == oldName) newName else it }.joinToString(",")
+        }
+    }
 }

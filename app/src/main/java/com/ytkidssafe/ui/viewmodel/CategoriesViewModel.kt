@@ -29,4 +29,10 @@ class CategoriesViewModel @Inject constructor(
             settingsRepository.removeCategory(category)
         }
     }
+
+    fun renameCategory(oldName: String, newName: String) {
+        viewModelScope.launch {
+            settingsRepository.renameCategory(oldName, newName)
+        }
+    }
 }

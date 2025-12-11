@@ -64,6 +64,10 @@ class SettingsRepository @Inject constructor(
         preferences.setCategories(categories)
     }
 
+    suspend fun renameCategory(oldName: String, newName: String) {
+        preferences.renameCategory(oldName, newName)
+    }
+
     private fun hashPin(pin: String): String {
         val bytes = MessageDigest.getInstance("SHA-256").digest(pin.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }

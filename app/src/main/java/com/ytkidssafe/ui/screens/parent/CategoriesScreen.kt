@@ -17,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -55,6 +56,7 @@ fun CategoriesScreen(
 ) {
     val categories by viewModel.categories.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editCategory by remember { mutableStateOf<String?>(null) }
     var deleteCategory by remember { mutableStateOf<String?>(null) }
 
     Scaffold(
@@ -117,6 +119,7 @@ fun CategoriesScreen(
                 items(categories) { category ->
                     CategoryCard(
                         category = category,
+                        onEdit = { editCategory = category },
                         onDelete = { deleteCategory = category }
                     )
                 }
@@ -161,6 +164,45 @@ fun CategoriesScreen(
         )
     }
 
+    // Edit Category Dialog
+    if (editCategory != null) {
+        var newName by remember { mutableStateOf(editCategory!!) }
+
+        AlertDialog(
+            onDismissRequest = { editCategory = null },
+            title = { Text("Edit Category") },
+            text = {
+                OutlinedTextField(
+                    value = newName,
+                    onValueChange = { newName = it },
+                    label = { Text("Category Name") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (newName.isNotBlank() && newName.trim() != editCategory) {
+                            viewModel.renameCategory(editCategory!!, newName.trim())
+                            editCategory = null
+                        } else if (newName.trim() == editCategory) {
+                            editCategory = null
+                        }
+                    },
+                    enabled = newName.isNotBlank()
+                ) {
+                    Text("Save")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { editCategory = null }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     // Delete Confirmation
     if (deleteCategory != null) {
         AlertDialog(
@@ -189,6 +231,7 @@ fun CategoriesScreen(
 @Composable
 private fun CategoryCard(
     category: String,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     Card(
@@ -213,6 +256,13 @@ private fun CategoryCard(
                     .weight(1f)
                     .padding(horizontal = 16.dp)
             )
+            IconButton(onClick = onEdit) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = "Edit",
+                    tint = Primary
+                )
+            }
             IconButton(onClick = onDelete) {
                 Icon(
                     imageVector = Icons.Default.Delete,
