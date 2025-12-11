@@ -25,12 +25,13 @@ class ProfileRepository @Inject constructor(
         return profileDao.getProfileById(id)?.toDomain()
     }
 
-    suspend fun createProfile(name: String, avatar: String, dailyLimitMinutes: Int): Profile {
+    suspend fun createProfile(name: String, avatar: String, dailyLimitMinutes: Int, categoryFilters: List<String> = emptyList()): Profile {
         val entity = ProfileEntity(
             id = UUID.randomUUID().toString(),
             name = name,
             avatar = avatar,
-            dailyLimitMinutes = dailyLimitMinutes
+            dailyLimitMinutes = dailyLimitMinutes,
+            categoryFilters = Json.encodeToString(categoryFilters)
         )
         profileDao.insertProfile(entity)
         return entity.toDomain()

@@ -68,8 +68,22 @@ class PlaylistRepository @Inject constructor(
         playlistDao.removePlaylistFromProfile(profileId, playlistId)
     }
 
+    suspend fun updatePlaylist(playlist: Playlist) {
+        playlistDao.updatePlaylist(playlist.toEntity())
+    }
+
     suspend fun deletePlaylist(playlist: Playlist) {
         playlistDao.deletePlaylist(playlist.toEntity())
+    }
+
+    suspend fun getAssignedPlaylistIds(profileId: String): List<String> {
+        return playlistDao.getAssignedPlaylistIds(profileId)
+    }
+
+    suspend fun setPlaylistsForProfile(profileId: String, playlistIds: List<String>) {
+        playlistDao.clearPlaylistsForProfile(profileId)
+        val refs = playlistIds.map { ProfilePlaylistCrossRef(profileId, it) }
+        playlistDao.insertProfilePlaylistRefs(refs)
     }
 
     private fun PlaylistEntity.toDomain(): Playlist {

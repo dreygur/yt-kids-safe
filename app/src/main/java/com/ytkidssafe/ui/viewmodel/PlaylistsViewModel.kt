@@ -3,6 +3,7 @@ package com.ytkidssafe.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ytkidssafe.data.repository.PlaylistRepository
+import com.ytkidssafe.data.repository.SettingsRepository
 import com.ytkidssafe.data.repository.VideoRepository
 import com.ytkidssafe.domain.model.Playlist
 import com.ytkidssafe.video.extractor.YouTubeService
@@ -19,10 +20,14 @@ import javax.inject.Inject
 class PlaylistsViewModel @Inject constructor(
     private val playlistRepository: PlaylistRepository,
     private val videoRepository: VideoRepository,
+    private val settingsRepository: SettingsRepository,
     private val youTubeService: YouTubeService
 ) : ViewModel() {
 
     val playlists: StateFlow<List<Playlist>> = playlistRepository.getAllPlaylists()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categories: StateFlow<List<String>> = settingsRepository.categories
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isLoading = MutableStateFlow(false)
@@ -90,6 +95,18 @@ class PlaylistsViewModel @Inject constructor(
             // Delete videos belonging to this playlist first
             videoRepository.deleteVideosByPlaylist(playlist.id)
             playlistRepository.deletePlaylist(playlist)
+        }
+    }
+
+    fun updatePlaylistCategory(playlist: Playlist, category: String) {
+        viewModelScope.launch {
+            playlistRepository.updatePlaylist(playlist.copy(category = category))
+        }
+    }
+
+    fun addCategory(category: String) {
+        viewModelScope.launch {
+            settingsRepository.addCategory(category)
         }
     }
 }

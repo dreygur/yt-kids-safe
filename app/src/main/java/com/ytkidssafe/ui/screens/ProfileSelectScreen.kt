@@ -1,6 +1,5 @@
 package com.ytkidssafe.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +14,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -33,7 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ytkidssafe.domain.model.Profile
 import com.ytkidssafe.ui.components.PinDialog
 import com.ytkidssafe.ui.components.ProfileAvatar
 import com.ytkidssafe.ui.theme.Background
@@ -45,6 +44,7 @@ import com.ytkidssafe.ui.viewmodel.ProfileSelectViewModel
 fun ProfileSelectScreen(
     onProfileSelected: (String) -> Unit,
     onParentAccess: () -> Unit,
+    onAddProfile: () -> Unit,
     autoSkipIfSingle: Boolean = true,
     viewModel: ProfileSelectViewModel = hiltViewModel()
 ) {
@@ -52,6 +52,7 @@ fun ProfileSelectScreen(
     val isPinSet by viewModel.isPinSet.collectAsState()
     val isLoaded by viewModel.isLoaded.collectAsState()
     var showPinDialog by remember { mutableStateOf(false) }
+    var showAddProfilePinDialog by remember { mutableStateOf(false) }
     var pinError by remember { mutableStateOf<String?>(null) }
 
     // Auto-navigate to home if only one profile exists (only on initial launch)
@@ -94,22 +95,30 @@ fun ProfileSelectScreen(
                     // No profiles yet
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.Center
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f)
                     ) {
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null,
+                            tint = TextLight.copy(alpha = 0.5f),
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No profiles yet",
+                            "No profiles yet",
                             style = MaterialTheme.typography.bodyLarge,
                             color = TextLight
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = "Tap + to add a profile",
+                            "Tap + to add a profile",
                             style = MaterialTheme.typography.bodySmall,
                             color = TextLight
                         )
                     }
                 } else {
-                    // Profile grid
+                    // Grid layout for profiles
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
                         contentPadding = PaddingValues(16.dp),
@@ -149,7 +158,7 @@ fun ProfileSelectScreen(
 
             // Add profile FAB
             FloatingActionButton(
-                onClick = { showPinDialog = true },
+                onClick = { showAddProfilePinDialog = true },
                 containerColor = Primary,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -163,7 +172,7 @@ fun ProfileSelectScreen(
         }
     }
 
-    // PIN Dialog
+    // PIN Dialog for settings access
     if (showPinDialog) {
         if (isPinSet) {
             PinDialog(
@@ -193,6 +202,40 @@ fun ProfileSelectScreen(
                     onParentAccess()
                 },
                 onDismiss = { showPinDialog = false }
+            )
+        }
+    }
+
+    // PIN Dialog for add profile
+    if (showAddProfilePinDialog) {
+        if (isPinSet) {
+            PinDialog(
+                title = "Enter PIN",
+                error = pinError,
+                onPinEntered = { pin ->
+                    if (viewModel.verifyPin(pin)) {
+                        showAddProfilePinDialog = false
+                        pinError = null
+                        onAddProfile()
+                    } else {
+                        pinError = "Incorrect PIN"
+                    }
+                },
+                onDismiss = {
+                    showAddProfilePinDialog = false
+                    pinError = null
+                }
+            )
+        } else {
+            PinDialog(
+                title = "Set up PIN",
+                isSetup = true,
+                onPinEntered = { pin ->
+                    viewModel.setPin(pin)
+                    showAddProfilePinDialog = false
+                    onAddProfile()
+                },
+                onDismiss = { showAddProfilePinDialog = false }
             )
         }
     }

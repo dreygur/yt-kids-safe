@@ -1,7 +1,6 @@
 package com.ytkidssafe.ui.screens.kid
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VideoLibrary
+import androidx.compose.material3.Icon
 import androidx.compose.ui.Alignment
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,6 +36,7 @@ import com.ytkidssafe.ui.components.PinDialog
 import com.ytkidssafe.ui.components.TimeBar
 import com.ytkidssafe.ui.components.VideoCard
 import com.ytkidssafe.ui.theme.Background
+import com.ytkidssafe.ui.theme.TextLight
 import com.ytkidssafe.ui.viewmodel.KidHomeViewModel
 
 @Composable
@@ -124,16 +128,28 @@ fun KidHomeScreen(
 
             // Videos list
             if (videos.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxSize()
                 ) {
+                    Icon(
+                        imageVector = Icons.Filled.VideoLibrary,
+                        contentDescription = null,
+                        tint = TextLight.copy(alpha = 0.5f),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "No videos yet!\nAsk a parent to add channels.",
+                        "No videos yet",
                         style = MaterialTheme.typography.bodyLarge,
-                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        color = TextLight
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        "Ask a parent to add channels",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLight
                     )
                 }
             } else {

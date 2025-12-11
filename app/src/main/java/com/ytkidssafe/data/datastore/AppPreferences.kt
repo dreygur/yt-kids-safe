@@ -17,6 +17,9 @@ class AppPreferences @Inject constructor(
         private val DEFAULT_DAILY_LIMIT = intPreferencesKey("default_daily_limit")
         private val CURRENT_PROFILE_ID = stringPreferencesKey("current_profile_id")
         private val PARENT_SESSION_EXPIRY = longPreferencesKey("parent_session_expiry")
+        private val CUSTOM_CATEGORIES = stringPreferencesKey("custom_categories")
+
+        val DEFAULT_CATEGORIES = listOf("Cartoons", "Learning", "Music", "Stories", "Games")
     }
 
     val pinHash: Flow<String?> = dataStore.data
@@ -34,6 +37,13 @@ class AppPreferences @Inject constructor(
     val parentSessionExpiry: Flow<Long> = dataStore.data
         .catch { emit(emptyPreferences()) }
         .map { it[PARENT_SESSION_EXPIRY] ?: 0L }
+
+    val categories: Flow<List<String>> = dataStore.data
+        .catch { emit(emptyPreferences()) }
+        .map { prefs ->
+            prefs[CUSTOM_CATEGORIES]?.split(",")?.filter { it.isNotBlank() }
+                ?: DEFAULT_CATEGORIES
+        }
 
     suspend fun setPinHash(hash: String) {
         dataStore.edit { it[PIN_HASH] = hash }
@@ -65,5 +75,35 @@ class AppPreferences @Inject constructor(
         var result = false
         dataStore.edit { result = it[PIN_HASH] != null }
         return result
+    }
+
+    suspend fun setCategories(categories: List<String>) {
+        dataStore.edit { it[CUSTOM_CATEGORIES] = categories.joinToString(",") }
+    }
+
+    suspend fun addCategory(category: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[CUSTOM_CATEGORIES]?.split(",")?.filter { it.isNotBlank() }
+                ?: DEFAULT_CATEGORIES
+            if (!current.contains(category)) {
+                prefs[CUSTOM_CATEGORIES] = (current + category).joinToString(",")
+            }
+        }
+    }
+
+    suspend fun removeCategory(category: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[CUSTOM_CATEGORIES]?.split(",")?.filter { it.isNotBlank() }
+                ?: DEFAULT_CATEGORIES
+            prefs[CUSTOM_CATEGORIES] = current.filter { it != category }.joinToString(",")
+        }
+    }
+
+    suspend fun renameCategory(oldName: String, newName: String) {
+        dataStore.edit { prefs ->
+            val current = prefs[CUSTOM_CATEGORIES]?.split(",")?.filter { it.isNotBlank() }
+                ?: DEFAULT_CATEGORIES
+            prefs[CUSTOM_CATEGORIES] = current.map { if (it == oldName) newName else it }.joinToString(",")
+        }
     }
 }

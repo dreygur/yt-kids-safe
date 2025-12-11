@@ -15,6 +15,7 @@ class SettingsRepository @Inject constructor(
     val defaultDailyLimit: Flow<Int> = preferences.defaultDailyLimit
     val currentProfileId: Flow<String?> = preferences.currentProfileId
     val parentSessionExpiry: Flow<Long> = preferences.parentSessionExpiry
+    val categories: Flow<List<String>> = preferences.categories
 
     suspend fun setPin(pin: String) {
         preferences.setPinHash(hashPin(pin))
@@ -49,6 +50,22 @@ class SettingsRepository @Inject constructor(
 
     suspend fun endParentSession() {
         preferences.clearParentSession()
+    }
+
+    suspend fun addCategory(category: String) {
+        preferences.addCategory(category)
+    }
+
+    suspend fun removeCategory(category: String) {
+        preferences.removeCategory(category)
+    }
+
+    suspend fun setCategories(categories: List<String>) {
+        preferences.setCategories(categories)
+    }
+
+    suspend fun renameCategory(oldName: String, newName: String) {
+        preferences.renameCategory(oldName, newName)
     }
 
     private fun hashPin(pin: String): String {

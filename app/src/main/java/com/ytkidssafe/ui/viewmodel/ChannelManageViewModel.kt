@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ytkidssafe.data.repository.ChannelRepository
+import com.ytkidssafe.data.repository.SettingsRepository
 import com.ytkidssafe.data.repository.VideoRepository
 import com.ytkidssafe.domain.model.Channel
 import com.ytkidssafe.video.extractor.YouTubeService
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class ChannelManageViewModel @Inject constructor(
     private val channelRepository: ChannelRepository,
     private val videoRepository: VideoRepository,
+    private val settingsRepository: SettingsRepository,
     private val youTubeService: YouTubeService
 ) : ViewModel() {
 
@@ -28,6 +30,9 @@ class ChannelManageViewModel @Inject constructor(
     }
 
     val channels: StateFlow<List<Channel>> = channelRepository.getAllChannels()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val categories: StateFlow<List<String>> = settingsRepository.categories
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _isLoading = MutableStateFlow(false)
@@ -123,6 +128,18 @@ class ChannelManageViewModel @Inject constructor(
     fun removeChannelFromProfile(channelId: String, profileId: String) {
         viewModelScope.launch {
             channelRepository.removeChannelFromProfile(channelId, profileId)
+        }
+    }
+
+    fun updateChannelCategory(channel: Channel, category: String) {
+        viewModelScope.launch {
+            channelRepository.updateChannel(channel.copy(category = category))
+        }
+    }
+
+    fun addCategory(category: String) {
+        viewModelScope.launch {
+            settingsRepository.addCategory(category)
         }
     }
 

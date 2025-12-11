@@ -1,23 +1,38 @@
 package com.ytkidssafe.ui.screens.parent
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -34,19 +49,29 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.ytkidssafe.domain.model.Avatars
+import com.ytkidssafe.domain.model.Categories
+import com.ytkidssafe.domain.model.Channel
+import com.ytkidssafe.domain.model.Playlist
 import com.ytkidssafe.domain.model.Profile
+import kotlinx.coroutines.launch
 import com.ytkidssafe.ui.components.ProfileAvatar
 import com.ytkidssafe.ui.theme.Background
 import com.ytkidssafe.ui.theme.Primary
@@ -61,9 +86,25 @@ fun ProfilesScreen(
 ) {
     val profiles by viewModel.profiles.collectAsState()
     val defaultDailyLimit by viewModel.defaultDailyLimit.collectAsState()
+    val allChannels by viewModel.allChannels.collectAsState()
+    val allPlaylists by viewModel.allPlaylists.collectAsState()
+    val scope = rememberCoroutineScope()
+
     var showAddDialog by remember { mutableStateOf(false) }
     var editingProfile by remember { mutableStateOf<Profile?>(null) }
     var deleteProfile by remember { mutableStateOf<Profile?>(null) }
+
+    // For loading assigned content when editing
+    var editingChannelIds by remember { mutableStateOf<List<String>>(emptyList()) }
+    var editingPlaylistIds by remember { mutableStateOf<List<String>>(emptyList()) }
+
+    // Load assigned content when editing a profile
+    LaunchedEffect(editingProfile) {
+        editingProfile?.let { profile ->
+            editingChannelIds = viewModel.getAssignedChannelIds(profile.id)
+            editingPlaylistIds = viewModel.getAssignedPlaylistIds(profile.id)
+        }
+    }
 
     Scaffold(
         containerColor = Background,
@@ -87,19 +128,48 @@ fun ProfilesScreen(
             }
         }
     ) { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            items(profiles) { profile ->
-                ProfileCard(
-                    profile = profile,
-                    onEdit = { editingProfile = profile },
-                    onDelete = { deleteProfile = profile }
+        if (profiles.isEmpty()) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = null,
+                    tint = TextLight.copy(alpha = 0.5f),
+                    modifier = Modifier.size(64.dp)
                 )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "No profiles yet",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Tap + to create a profile",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+            }
+        } else {
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                items(profiles) { profile ->
+                    ProfileCard(
+                        profile = profile,
+                        onEdit = { editingProfile = profile },
+                        onDelete = { deleteProfile = profile }
+                    )
+                }
             }
         }
     }
@@ -109,22 +179,35 @@ fun ProfilesScreen(
         ProfileDialog(
             profile = editingProfile,
             defaultDailyLimit = defaultDailyLimit,
+            allChannels = allChannels,
+            allPlaylists = allPlaylists,
+            initialChannelIds = if (editingProfile != null) editingChannelIds else emptyList(),
+            initialPlaylistIds = if (editingProfile != null) editingPlaylistIds else emptyList(),
             onDismiss = {
                 showAddDialog = false
                 editingProfile = null
+                editingChannelIds = emptyList()
+                editingPlaylistIds = emptyList()
             },
-            onSave = { name, avatar, dailyLimit ->
+            onSave = { name, avatar, dailyLimit, categoryFilters, channelIds, playlistIds ->
                 if (editingProfile != null) {
-                    viewModel.updateProfile(editingProfile!!.copy(
-                        name = name,
-                        avatar = avatar,
-                        dailyLimitMinutes = dailyLimit
-                    ))
+                    viewModel.updateProfile(
+                        editingProfile!!.copy(
+                            name = name,
+                            avatar = avatar,
+                            dailyLimitMinutes = dailyLimit,
+                            categoryFilters = categoryFilters
+                        ),
+                        channelIds,
+                        playlistIds
+                    )
                 } else {
-                    viewModel.createProfile(name, avatar, dailyLimit)
+                    viewModel.createProfile(name, avatar, dailyLimit, categoryFilters, channelIds, playlistIds)
                 }
                 showAddDialog = false
                 editingProfile = null
+                editingChannelIds = emptyList()
+                editingPlaylistIds = emptyList()
             }
         )
     }
@@ -201,20 +284,42 @@ private fun ProfileCard(
 private fun ProfileDialog(
     profile: Profile?,
     defaultDailyLimit: Int,
+    allChannels: List<Channel>,
+    allPlaylists: List<Playlist>,
+    initialChannelIds: List<String>,
+    initialPlaylistIds: List<String>,
     onDismiss: () -> Unit,
-    onSave: (String, String, Int) -> Unit
+    onSave: (String, String, Int, List<String>, List<String>, List<String>) -> Unit
 ) {
     var name by remember { mutableStateOf(profile?.name ?: "") }
     var selectedAvatar by remember { mutableStateOf(profile?.avatar ?: "bear") }
     var dailyLimitText by remember {
         mutableStateOf((profile?.dailyLimitMinutes ?: defaultDailyLimit).toString())
     }
+    val availableCategories = Categories.all.filter { it != "All" }
+    var selectedCategories by remember {
+        mutableStateOf(profile?.categoryFilters ?: emptyList())
+    }
+    var selectedChannelIds by remember { mutableStateOf(initialChannelIds) }
+    var selectedPlaylistIds by remember { mutableStateOf(initialPlaylistIds) }
+
+    // Update when initial values change (async loading)
+    LaunchedEffect(initialChannelIds) {
+        selectedChannelIds = initialChannelIds
+    }
+    LaunchedEffect(initialPlaylistIds) {
+        selectedPlaylistIds = initialPlaylistIds
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (profile == null) "Add Profile" else "Edit Profile") },
         text = {
-            Column {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
@@ -225,7 +330,10 @@ private fun ProfileDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text("Avatar", style = MaterialTheme.typography.bodyLarge)
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.height(56.dp)
+                ) {
                     items(Avatars.all) { (key, _) ->
                         ProfileAvatar(
                             avatar = key,
@@ -242,7 +350,6 @@ private fun ProfileDialog(
                 OutlinedTextField(
                     value = dailyLimitText,
                     onValueChange = { input ->
-                        // Only allow digits, max 1440
                         val filtered = input.filter { it.isDigit() }
                         val value = filtered.toIntOrNull() ?: 0
                         dailyLimitText = if (value > 1440) "1440" else filtered
@@ -253,13 +360,91 @@ private fun ProfileDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Assigned Channels
+                Text("Assigned Channels", style = MaterialTheme.typography.bodyLarge)
+                if (allChannels.isEmpty()) {
+                    Text(
+                        "No channels added yet",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLight
+                    )
+                } else {
+                    Text(
+                        "Tap to select/deselect",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLight
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
+                        items(allChannels) { channel ->
+                            SelectableContentItem(
+                                thumbnailUrl = channel.thumbnailUrl,
+                                title = channel.title,
+                                isSelected = selectedChannelIds.contains(channel.id),
+                                isCircle = true,
+                                onClick = {
+                                    selectedChannelIds = if (selectedChannelIds.contains(channel.id)) {
+                                        selectedChannelIds - channel.id
+                                    } else {
+                                        selectedChannelIds + channel.id
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Assigned Playlists
+                Text("Assigned Playlists", style = MaterialTheme.typography.bodyLarge)
+                if (allPlaylists.isEmpty()) {
+                    Text(
+                        "No playlists imported yet",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLight
+                    )
+                } else {
+                    Text(
+                        "Tap to select/deselect",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = TextLight
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.height(100.dp)
+                    ) {
+                        items(allPlaylists) { playlist ->
+                            SelectableContentItem(
+                                thumbnailUrl = playlist.thumbnailUrl,
+                                title = playlist.title,
+                                isSelected = selectedPlaylistIds.contains(playlist.id),
+                                isCircle = false,
+                                onClick = {
+                                    selectedPlaylistIds = if (selectedPlaylistIds.contains(playlist.id)) {
+                                        selectedPlaylistIds - playlist.id
+                                    } else {
+                                        selectedPlaylistIds + playlist.id
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     val limit = dailyLimitText.toIntOrNull()?.coerceIn(1, 1440) ?: defaultDailyLimit
-                    onSave(name, selectedAvatar, limit)
+                    onSave(name, selectedAvatar, limit, selectedCategories, selectedChannelIds, selectedPlaylistIds)
                 },
                 enabled = name.isNotBlank() && dailyLimitText.isNotBlank()
             ) {
@@ -270,4 +455,56 @@ private fun ProfileDialog(
             TextButton(onClick = onDismiss) { Text("Cancel") }
         }
     )
+}
+
+@Composable
+private fun SelectableContentItem(
+    thumbnailUrl: String,
+    title: String,
+    isSelected: Boolean,
+    isCircle: Boolean,
+    onClick: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .width(80.dp)
+            .clickable(onClick = onClick)
+    ) {
+        Box {
+            AsyncImage(
+                model = thumbnailUrl,
+                contentDescription = title,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(64.dp)
+                    .clip(if (isCircle) CircleShape else RoundedCornerShape(8.dp))
+                    .then(
+                        if (isSelected) Modifier.border(
+                            3.dp,
+                            Primary,
+                            if (isCircle) CircleShape else RoundedCornerShape(8.dp)
+                        ) else Modifier
+                    )
+            )
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = "Selected",
+                    tint = Primary,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = if (isSelected) Primary else TextLight
+        )
+    }
 }

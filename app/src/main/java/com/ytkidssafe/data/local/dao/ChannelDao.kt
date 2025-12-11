@@ -31,6 +31,9 @@ interface ChannelDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertProfileChannelCrossRef(crossRef: ProfileChannelCrossRef)
 
+    @Update
+    suspend fun updateChannel(channel: ChannelEntity)
+
     @Delete
     suspend fun deleteChannel(channel: ChannelEntity)
 
@@ -57,4 +60,10 @@ interface ChannelDao {
 
     @Query("DELETE FROM profile_channel_cross_ref")
     suspend fun deleteAllProfileChannelRefs()
+
+    @Query("SELECT channelId FROM profile_channel_cross_ref WHERE profileId = :profileId")
+    suspend fun getAssignedChannelIds(profileId: String): List<String>
+
+    @Query("DELETE FROM profile_channel_cross_ref WHERE profileId = :profileId")
+    suspend fun clearChannelsForProfile(profileId: String)
 }

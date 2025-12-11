@@ -9,5 +9,11 @@ data class Channel(
 )
 
 object Categories {
-    val all = listOf("All", "Cartoons", "Learning", "Music", "Stories", "Games")
+    val defaults = listOf("Cartoons", "Learning", "Music", "Stories", "Games")
+
+    // For display purposes - prepends "All" to any category list
+    fun withAll(categories: List<String>) = listOf("All") + categories
+
+    // Legacy compatibility
+    val all get() = withAll(defaults)
 }

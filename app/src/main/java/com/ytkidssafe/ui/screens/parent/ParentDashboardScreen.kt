@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.PlaylistPlay
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Card
@@ -32,7 +33,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ytkidssafe.BuildConfig
 import com.ytkidssafe.ui.theme.Accent1
 import com.ytkidssafe.ui.theme.Accent2
 import com.ytkidssafe.ui.theme.Background
@@ -46,6 +49,7 @@ fun ParentDashboardScreen(
     onNavigateToProfiles: () -> Unit,
     onNavigateToChannels: () -> Unit,
     onNavigateToPlaylists: () -> Unit,
+    onNavigateToCategories: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -105,11 +109,29 @@ fun ParentDashboardScreen(
             )
 
             DashboardCard(
+                icon = Icons.AutoMirrored.Filled.Label,
+                title = "Categories",
+                subtitle = "Manage content categories",
+                iconTint = Accent2,
+                onClick = onNavigateToCategories
+            )
+
+            DashboardCard(
                 icon = Icons.Default.Settings,
                 title = "Settings",
                 subtitle = "PIN, time limits, backup",
-                iconTint = Accent2,
+                iconTint = TextLight,
                 onClick = onNavigateToSettings
+            )
+
+            // App footer
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = "YT Kids Safe v${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextLight,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }

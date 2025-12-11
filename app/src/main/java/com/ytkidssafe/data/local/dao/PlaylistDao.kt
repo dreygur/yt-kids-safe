@@ -31,9 +31,21 @@ interface PlaylistDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertProfilePlaylistCrossRef(crossRef: ProfilePlaylistCrossRef)
 
+    @Update
+    suspend fun updatePlaylist(playlist: PlaylistEntity)
+
     @Delete
     suspend fun deletePlaylist(playlist: PlaylistEntity)
 
     @Query("DELETE FROM profile_playlist_cross_ref WHERE profileId = :profileId AND playlistId = :playlistId")
     suspend fun removePlaylistFromProfile(profileId: String, playlistId: String)
+
+    @Query("SELECT playlistId FROM profile_playlist_cross_ref WHERE profileId = :profileId")
+    suspend fun getAssignedPlaylistIds(profileId: String): List<String>
+
+    @Query("DELETE FROM profile_playlist_cross_ref WHERE profileId = :profileId")
+    suspend fun clearPlaylistsForProfile(profileId: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProfilePlaylistRefs(refs: List<ProfilePlaylistCrossRef>)
 }
