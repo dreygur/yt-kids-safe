@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -48,6 +49,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.ytkidssafe.domain.model.Avatars
+import com.ytkidssafe.domain.model.Categories
 import com.ytkidssafe.domain.model.Profile
 import com.ytkidssafe.ui.components.ProfileAvatar
 import com.ytkidssafe.ui.theme.Background
@@ -144,15 +146,16 @@ fun ProfilesScreen(
                 showAddDialog = false
                 editingProfile = null
             },
-            onSave = { name, avatar, dailyLimit ->
+            onSave = { name, avatar, dailyLimit, categoryFilters ->
                 if (editingProfile != null) {
                     viewModel.updateProfile(editingProfile!!.copy(
                         name = name,
                         avatar = avatar,
-                        dailyLimitMinutes = dailyLimit
+                        dailyLimitMinutes = dailyLimit,
+                        categoryFilters = categoryFilters
                     ))
                 } else {
-                    viewModel.createProfile(name, avatar, dailyLimit)
+                    viewModel.createProfile(name, avatar, dailyLimit, categoryFilters)
                 }
                 showAddDialog = false
                 editingProfile = null
@@ -233,12 +236,17 @@ private fun ProfileDialog(
     profile: Profile?,
     defaultDailyLimit: Int,
     onDismiss: () -> Unit,
-    onSave: (String, String, Int) -> Unit
+    onSave: (String, String, Int, List<String>) -> Unit
 ) {
     var name by remember { mutableStateOf(profile?.name ?: "") }
     var selectedAvatar by remember { mutableStateOf(profile?.avatar ?: "bear") }
     var dailyLimitText by remember {
         mutableStateOf((profile?.dailyLimitMinutes ?: defaultDailyLimit).toString())
+    }
+    // Categories excluding "All" - empty list means all allowed
+    val availableCategories = Categories.all.filter { it != "All" }
+    var selectedCategories by remember {
+        mutableStateOf(profile?.categoryFilters ?: emptyList())
     }
 
     AlertDialog(
@@ -284,13 +292,41 @@ private fun ProfileDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text("Allowed Categories", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    "Leave unchecked to allow all",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextLight
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                availableCategories.forEach { category ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Checkbox(
+                            checked = selectedCategories.contains(category),
+                            onCheckedChange = { checked ->
+                                selectedCategories = if (checked) {
+                                    selectedCategories + category
+                                } else {
+                                    selectedCategories - category
+                                }
+                            }
+                        )
+                        Text(category, style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
                 onClick = {
                     val limit = dailyLimitText.toIntOrNull()?.coerceIn(1, 1440) ?: defaultDailyLimit
-                    onSave(name, selectedAvatar, limit)
+                    onSave(name, selectedAvatar, limit, selectedCategories)
                 },
                 enabled = name.isNotBlank() && dailyLimitText.isNotBlank()
             ) {

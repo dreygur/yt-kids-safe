@@ -72,9 +72,9 @@ class ProfileSelectViewModel @Inject constructor(
         }
     }
 
-    fun createProfile(name: String, avatar: String, dailyLimitMinutes: Int) {
+    fun createProfile(name: String, avatar: String, dailyLimitMinutes: Int, categoryFilters: List<String> = emptyList()) {
         viewModelScope.launch {
-            profileRepository.createProfile(name, avatar, dailyLimitMinutes)
+            profileRepository.createProfile(name, avatar, dailyLimitMinutes, categoryFilters)
         }
     }
 

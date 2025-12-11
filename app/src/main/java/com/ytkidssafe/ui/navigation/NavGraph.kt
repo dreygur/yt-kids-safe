@@ -290,7 +290,11 @@ fun NavGraph(
 
         // Parent Settings
         composable(Routes.PARENT_SETTINGS) {
-            SettingsScreen(onBack = { navController.popBackStack() })
+            SettingsScreen(
+                onBack = { navController.popBackStack() },
+                onNavigateToChannels = { navController.navigate(Routes.PARENT_CHANNELS) },
+                onNavigateToPlaylists = { navController.navigate(Routes.PARENT_PLAYLISTS) }
+            )
         }
     }
 }

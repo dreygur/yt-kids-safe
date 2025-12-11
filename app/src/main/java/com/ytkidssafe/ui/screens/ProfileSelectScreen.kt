@@ -1,15 +1,20 @@
 package com.ytkidssafe.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -26,20 +31,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.ytkidssafe.domain.model.Profile
 import com.ytkidssafe.ui.components.PinDialog
 import com.ytkidssafe.ui.components.ProfileAvatar
 import com.ytkidssafe.ui.theme.Background
 import com.ytkidssafe.ui.theme.Primary
 import com.ytkidssafe.ui.theme.TextLight
 import com.ytkidssafe.ui.viewmodel.ProfileSelectViewModel
-import kotlin.math.cos
-import kotlin.math.sin
-import kotlin.random.Random
 
 @Composable
 fun ProfileSelectScreen(
@@ -94,47 +93,49 @@ fun ProfileSelectScreen(
 
                 if (profiles.isEmpty()) {
                     // No profiles yet
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "No profiles yet",
-                                style = MaterialTheme.typography.bodyLarge,
-                                color = TextLight
-                            )
-                            Text(
-                                text = "Tap + to add a profile",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextLight
-                            )
-                        }
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = null,
+                            tint = TextLight.copy(alpha = 0.5f),
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            "No profiles yet",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = TextLight
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "Tap + to add a profile",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextLight
+                        )
                     }
                 } else {
-                    // Random bubble layout from center
-                    Box(
-                        modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.Center
+                    // Grid layout for profiles
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        contentPadding = PaddingValues(16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalArrangement = Arrangement.spacedBy(24.dp),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        val bubblePositions = remember(profiles.size) {
-                            generateBubblePositions(profiles.size)
-                        }
-                        profiles.forEachIndexed { index, profile ->
-                            val (offsetX, offsetY) = bubblePositions.getOrElse(index) { Pair(0.dp, 0.dp) }
-                            Box(
-                                modifier = Modifier.offset(x = offsetX, y = offsetY)
-                            ) {
-                                ProfileAvatar(
-                                    avatar = profile.avatar,
-                                    name = profile.name,
-                                    size = 100.dp,
-                                    onClick = {
-                                        viewModel.selectProfile(profile.id)
-                                        onProfileSelected(profile.id)
-                                    }
-                                )
-                            }
+                        items(profiles) { profile ->
+                            ProfileAvatar(
+                                avatar = profile.avatar,
+                                name = profile.name,
+                                size = 100.dp,
+                                onClick = {
+                                    viewModel.selectProfile(profile.id)
+                                    onProfileSelected(profile.id)
+                                }
+                            )
                         }
                     }
                 }
@@ -238,22 +239,4 @@ fun ProfileSelectScreen(
             )
         }
     }
-}
-
-private fun generateBubblePositions(count: Int): List<Pair<Dp, Dp>> {
-    if (count == 0) return emptyList()
-    if (count == 1) return listOf(Pair(0.dp, 0.dp))
-
-    val positions = mutableListOf<Pair<Dp, Dp>>()
-    val random = Random(count) // Seeded for consistency
-    val baseRadius = 80f
-
-    for (i in 0 until count) {
-        val angle = (2 * Math.PI * i / count) + random.nextDouble(-0.3, 0.3)
-        val radius = baseRadius + random.nextFloat() * 40
-        val x = (cos(angle) * radius).toFloat()
-        val y = (sin(angle) * radius).toFloat()
-        positions.add(Pair(x.dp, y.dp))
-    }
-    return positions
 }
