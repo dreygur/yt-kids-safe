@@ -6,11 +6,17 @@ A parent-controlled YouTube app for kids with full content control.
 ## Tech Stack
 | Component | Choice |
 |-----------|--------|
-| Framework | Flutter |
-| Local DB | Hive |
-| Settings | SharedPreferences |
-| Video | YouTube Data API + youtube_player_flutter |
-| Backup | JSON export/import |
+| Language | Kotlin |
+| UI | Jetpack Compose + Material 3 |
+| Architecture | MVVM + Clean Architecture |
+| DI | Hilt |
+| Local DB | Room |
+| Settings | DataStore |
+| Video | ExoPlayer + NewPipe Extractor |
+| Async | Coroutines + Flow |
+| Navigation | Compose Navigation |
+| Backup | Kotlinx Serialization (JSON) |
+| Min SDK | 26 (Android 8.0) |
 
 ---
 
@@ -44,11 +50,11 @@ A parent-controlled YouTube app for kids with full content control.
 
 | Element | Value |
 |---------|-------|
-| Card radius | 16px |
-| Button radius | 24px |
+| Card radius | 16dp |
+| Button radius | 24dp |
 | Thumbnail ratio | 16:9 |
-| Spacing unit | 16px |
-| Shadow | Soft, 4px blur, 10% opacity |
+| Spacing unit | 16dp |
+| Shadow | Soft, 4dp blur, 10% opacity |
 
 ---
 
@@ -78,7 +84,7 @@ A parent-controlled YouTube app for kids with full content control.
 │ 🔴 Channel Name                  │
 └──────────────────────────────────┘
 ```
-- Rounded corners (16px)
+- Rounded corners (16dp)
 - Duration badge bottom-right of thumbnail
 - Channel color dot + name
 
@@ -139,96 +145,144 @@ Cartoon animal faces for kid profiles:
 ## Data Models
 
 ### Profile
-```dart
-class Profile {
-  String id;
-  String name;
-  String avatar;
-  int dailyLimitMinutes;
-  int usedTodayMinutes;
-  DateTime lastResetDate;
-  List<String> categoryFilters;
-}
+```kotlin
+data class Profile(
+    val id: String,
+    val name: String,
+    val avatar: String,
+    val dailyLimitMinutes: Int,
+    val usedTodayMinutes: Int,
+    val lastResetDate: Long,
+    val categoryFilters: List<String>
+)
 ```
 
 ### Channel
-```dart
-class Channel {
-  String id;
-  String youtubeId;
-  String title;
-  String thumbnail;
-  String category;
-  List<String> profileIds;
-}
+```kotlin
+data class Channel(
+    val id: String,
+    val youtubeId: String,
+    val title: String,
+    val thumbnailUrl: String,
+    val category: String,
+    val profileIds: List<String>
+)
 ```
 
 ### Playlist
-```dart
-class Playlist {
-  String id;
-  String youtubeId;
-  String title;
-  String thumbnail;
-  List<String> profileIds;
-}
+```kotlin
+data class Playlist(
+    val id: String,
+    val youtubeId: String,
+    val title: String,
+    val thumbnailUrl: String,
+    val profileIds: List<String>
+)
 ```
 
 ### Video (Cached)
-```dart
-class Video {
-  String id;
-  String youtubeId;
-  String title;
-  String thumbnail;
-  String channelId;
-  String duration;
-  DateTime cachedAt;
-}
+```kotlin
+data class Video(
+    val id: String,
+    val youtubeId: String,
+    val title: String,
+    val thumbnailUrl: String,
+    val channelId: String,
+    val duration: String,
+    val cachedAt: Long
+)
 ```
 
 ---
 
 ## Project Structure
 ```
-lib/
-├── main.dart
-├── app.dart
-├── config/
-│   ├── theme.dart
-│   └── constants.dart
-├── models/
-│   ├── profile.dart
-│   ├── channel.dart
-│   ├── playlist.dart
-│   └── video.dart
-├── services/
-│   ├── youtube_service.dart
-│   ├── storage_service.dart
-│   └── time_tracker.dart
-├── screens/
-│   ├── profile_select_screen.dart
-│   ├── kid/
-│   │   ├── home_screen.dart
-│   │   ├── channels_screen.dart
-│   │   ├── player_screen.dart
-│   │   └── times_up_screen.dart
-│   └── parent/
-│       ├── dashboard_screen.dart
-│       ├── profiles_screen.dart
-│       ├── channels_screen.dart
-│       ├── playlists_screen.dart
-│       └── settings_screen.dart
-├── widgets/
-│   ├── video_card.dart
-│   ├── channel_tile.dart
-│   ├── profile_avatar.dart
-│   ├── time_bar.dart
-│   ├── category_pills.dart
-│   └── pin_dialog.dart
-└── utils/
-    ├── youtube_parser.dart
-    └── backup_helper.dart
+app/src/main/java/com/ytkidssafe/
+├── YtKidsApp.kt                 # Application class
+├── MainActivity.kt
+├── di/
+│   ├── AppModule.kt
+│   ├── DatabaseModule.kt
+│   └── VideoModule.kt
+├── data/
+│   ├── local/
+│   │   ├── AppDatabase.kt
+│   │   ├── entity/
+│   │   │   ├── ProfileEntity.kt
+│   │   │   ├── ChannelEntity.kt
+│   │   │   ├── PlaylistEntity.kt
+│   │   │   └── VideoEntity.kt
+│   │   ├── dao/
+│   │   │   ├── ProfileDao.kt
+│   │   │   ├── ChannelDao.kt
+│   │   │   ├── PlaylistDao.kt
+│   │   │   └── VideoDao.kt
+│   │   └── converter/
+│   │       └── Converters.kt
+│   ├── datastore/
+│   │   └── AppPreferences.kt
+│   └── repository/
+│       ├── ProfileRepository.kt
+│       ├── ChannelRepository.kt
+│       ├── VideoRepository.kt
+│       └── SettingsRepository.kt
+├── domain/
+│   ├── model/
+│   │   ├── Profile.kt
+│   │   ├── Channel.kt
+│   │   ├── Playlist.kt
+│   │   ├── Video.kt
+│   │   └── TimeStatus.kt
+│   └── usecase/
+│       ├── profile/
+│       ├── channel/
+│       ├── video/
+│       └── settings/
+├── ui/
+│   ├── theme/
+│   │   ├── Color.kt
+│   │   ├── Type.kt
+│   │   ├── Theme.kt
+│   │   └── Shape.kt
+│   ├── components/
+│   │   ├── VideoCard.kt
+│   │   ├── ChannelTile.kt
+│   │   ├── ProfileAvatar.kt
+│   │   ├── TimeBar.kt
+│   │   ├── CategoryPills.kt
+│   │   ├── PinDialog.kt
+│   │   └── BottomNavBar.kt
+│   ├── navigation/
+│   │   └── NavGraph.kt
+│   ├── screens/
+│   │   ├── ProfileSelectScreen.kt
+│   │   ├── kid/
+│   │   │   ├── KidHomeScreen.kt
+│   │   │   ├── KidChannelsScreen.kt
+│   │   │   ├── VideoPlayerScreen.kt
+│   │   │   └── TimesUpScreen.kt
+│   │   └── parent/
+│   │       ├── ParentDashboardScreen.kt
+│   │       ├── ProfilesScreen.kt
+│   │       ├── ChannelsScreen.kt
+│   │       ├── PlaylistsScreen.kt
+│   │       └── SettingsScreen.kt
+│   └── viewmodel/
+│       ├── ProfileSelectViewModel.kt
+│       ├── KidHomeViewModel.kt
+│       ├── VideoPlayerViewModel.kt
+│       └── ParentDashboardViewModel.kt
+├── video/
+│   ├── extractor/
+│   │   └── StreamExtractor.kt
+│   └── player/
+│       ├── KidsPlayerFactory.kt
+│       └── KidsPlayerView.kt
+├── service/
+│   ├── TimeTracker.kt
+│   └── TimeResetWorker.kt
+└── security/
+    └── PinManager.kt
 ```
 
 ---
@@ -256,7 +310,7 @@ Kid Home (Primary) ◄──────────────┤
 2. On video pause/exit: stop timer, save elapsed
 3. Check remaining time before playing
 4. If time exhausted: show Time's Up screen
-5. Reset daily at midnight (or configurable time)
+5. Reset daily at midnight (via WorkManager)
 6. Parent can override via PIN
 
 ---

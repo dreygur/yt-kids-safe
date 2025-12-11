@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#7EC8E3"
+        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0"/>
+
+    <!-- Play button triangle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M45,38L45,70L72,54Z"/>
+
+    <!-- Kid-friendly star -->
+    <path
+        android:fillColor="#FFD166"
+        android:pathData="M70,30L72,36L78,36L73,40L75,46L70,42L65,46L67,40L62,36L68,36Z"/>
+</vector>
