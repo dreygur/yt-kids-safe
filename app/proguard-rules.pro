@@ -29,3 +29,13 @@
 -keepclassmembers class kotlinx.coroutines.** {
     volatile <fields>;
 }
+
+# Rhino JavaScript Engine (used by NewPipe extractor)
+-dontwarn java.beans.**
+-dontwarn javax.script.**
+-dontwarn org.mozilla.javascript.**
+-keep class org.mozilla.javascript.** { *; }
+
+# Missing desktop Java classes not available on Android
+-dontwarn java.awt.**
+-dontwarn javax.swing.**
