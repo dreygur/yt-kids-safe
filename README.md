@@ -58,7 +58,7 @@ Yes, really. Claude and I had a lovely chat, and now this exists. You're welcome
 ./gradlew assembleDebug
 ```
 
-Or just grab the APK from [Releases](https://github.com/user/yt-kids/releases).
+Or just grab the APK from [Releases](https://github.com/dreygur/yt-kids-safe/releases).
 
 ## Setup
 
