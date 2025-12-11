@@ -428,14 +428,16 @@ private fun ProfileDialog(
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
-                                    .width(24.dp)
+                                    .width(32.dp)
                                     .height(100.dp)
                                     .background(
-                                        brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
                                             colors = listOf(
-                                                androidx.compose.ui.graphics.Color.Transparent,
-                                                MaterialTheme.colorScheme.surface
-                                            )
+                                                MaterialTheme.colorScheme.surface,
+                                                androidx.compose.ui.graphics.Color.Transparent
+                                            ),
+                                            center = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, 50f),
+                                            radius = 150f
                                         )
                                     )
                             )
@@ -509,14 +511,16 @@ private fun ProfileDialog(
                             Box(
                                 modifier = Modifier
                                     .align(Alignment.CenterEnd)
-                                    .width(24.dp)
+                                    .width(32.dp)
                                     .height(100.dp)
                                     .background(
-                                        brush = androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        brush = androidx.compose.ui.graphics.Brush.radialGradient(
                                             colors = listOf(
-                                                androidx.compose.ui.graphics.Color.Transparent,
-                                                MaterialTheme.colorScheme.surface
-                                            )
+                                                MaterialTheme.colorScheme.surface,
+                                                androidx.compose.ui.graphics.Color.Transparent
+                                            ),
+                                            center = androidx.compose.ui.geometry.Offset(Float.POSITIVE_INFINITY, 50f),
+                                            radius = 150f
                                         )
                                     )
                             )
