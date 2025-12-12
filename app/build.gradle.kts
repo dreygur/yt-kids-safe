@@ -23,13 +23,10 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystoreFile = file("keystore.jks")
-            if (keystoreFile.exists()) {
-                storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("KEY_ALIAS")
-                keyPassword = System.getenv("KEY_PASSWORD")
-            }
+            storeFile = file("keystore.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "ytkidssafe123"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "ytkidssafe"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "ytkidssafe123"
         }
     }
 
