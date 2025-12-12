@@ -7,8 +7,8 @@
     <!-- Center play/pause button -->
     <ImageButton
         android:id="@id/exo_play_pause"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
+        android:layout_width="96dp"
+        android:layout_height="96dp"
         android:layout_gravity="center"
         android:background="@drawable/play_button_bg"
         android:scaleType="center"
