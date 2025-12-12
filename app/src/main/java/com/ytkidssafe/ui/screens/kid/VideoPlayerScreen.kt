@@ -34,6 +34,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -220,7 +221,7 @@ fun VideoPlayerScreen(
 
                 Spacer(modifier = Modifier.weight(1f))
 
-                // Up Next videos row at bottom
+                // Up Next videos row - cards at very bottom, seek bar sits above them
                 AnimatedVisibility(
                     visible = controlsVisible && relatedVideos.isNotEmpty(),
                     enter = fadeIn() + slideInVertically { it },
@@ -229,10 +230,10 @@ fun VideoPlayerScreen(
                     LazyRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(100.dp)
+                            .height(120.dp)
                             .background(Color.Black.copy(alpha = 0.8f)),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         items(relatedVideos) { relatedVideo ->
                             UpNextThumbnail(
@@ -244,8 +245,26 @@ fun VideoPlayerScreen(
                 }
             }
 
-            // Next button on right side (simple conditional, avoids AnimatedVisibility scope issue)
+            // Prev/Next buttons on sides
             if (controlsVisible && relatedVideos.isNotEmpty()) {
+                // Previous button on left
+                IconButton(
+                    onClick = { viewModel.playPreviousVideo() },
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(start = 16.dp)
+                        .size(56.dp)
+                        .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SkipPrevious,
+                        contentDescription = "Previous Video",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                // Next button on right
                 IconButton(
                     onClick = { viewModel.playVideo(relatedVideos.first()) },
                     modifier = Modifier

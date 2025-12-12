@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Center play/pause button -->
+    <ImageButton
+        android:id="@id/exo_play_pause"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:layout_gravity="center"
+        android:background="@drawable/play_button_bg"
+        android:scaleType="center"
+        android:contentDescription="@null" />
+
+    <!-- Seek bar positioned above the cards (120dp from bottom) -->
+    <androidx.media3.ui.DefaultTimeBar
+        android:id="@id/exo_progress"
+        android:layout_width="match_parent"
+        android:layout_height="32dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="120dp"
+        android:layout_marginHorizontal="16dp"
+        app:played_color="#E91E63"
+        app:unplayed_color="#4DFFFFFF"
+        app:buffered_color="#99FFFFFF"
+        app:scrubber_color="#E91E63"
+        app:scrubber_enabled_size="16dp"
+        app:scrubber_dragged_size="20dp"
+        app:bar_height="4dp" />
+
+</FrameLayout>

@@ -45,6 +45,7 @@ class VideoPlayerViewModel @Inject constructor(
     private var currentProfileId: String? = null
     private var elapsedSeconds = 0
     private var lastSavedMinute = 0
+    private val videoHistory = mutableListOf<Video>()
 
     fun loadVideo(profileId: String, videoId: String) {
         currentProfileId = profileId
@@ -98,6 +99,9 @@ class VideoPlayerViewModel @Inject constructor(
 
     fun playVideo(video: Video) {
         currentProfileId?.let {
+            // Save current video to history before switching
+            _video.value?.let { current -> videoHistory.add(current) }
+
             _video.value = video
             _youtubeId.value = video.youtubeId
             elapsedSeconds = 0
@@ -117,6 +121,34 @@ class VideoPlayerViewModel @Inject constructor(
                     val allVideos = videoRepository.getAllVideos().first()
                     _relatedVideos.value = allVideos
                         .filter { it.id != video.id }
+                        .shuffled()
+                        .take(10)
+                }
+            }
+        }
+    }
+
+    fun playPreviousVideo() {
+        if (videoHistory.isNotEmpty()) {
+            val previousVideo = videoHistory.removeAt(videoHistory.lastIndex)
+            _video.value = previousVideo
+            _youtubeId.value = previousVideo.youtubeId
+            elapsedSeconds = 0
+            lastSavedMinute = 0
+
+            viewModelScope.launch {
+                val channelVideos = previousVideo.channelId?.let { channelId ->
+                    videoRepository.getVideosByChannel(channelId).first()
+                } ?: emptyList()
+
+                if (channelVideos.size > 1) {
+                    _relatedVideos.value = channelVideos
+                        .filter { it.id != previousVideo.id }
+                        .take(10)
+                } else {
+                    val allVideos = videoRepository.getAllVideos().first()
+                    _relatedVideos.value = allVideos
+                        .filter { it.id != previousVideo.id }
                         .shuffled()
                         .take(10)
                 }

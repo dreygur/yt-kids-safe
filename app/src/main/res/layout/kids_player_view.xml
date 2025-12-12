@@ -4,9 +4,7 @@
     android:id="@+id/player_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    app:controller_layout_id="@layout/custom_exo_player_control_view"
-    app:show_buffering="when_playing"
+    app:controller_layout_id="@layout/custom_player_control"
     app:use_controller="true"
     app:hide_on_touch="true"
-    app:auto_show="true"
     app:show_timeout="3000" />

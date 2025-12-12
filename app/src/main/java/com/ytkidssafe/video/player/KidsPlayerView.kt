@@ -176,12 +176,10 @@ fun KidsVideoPlayer(
             }
 
             is PlayerState.NativePlayer -> {
-                // ExoPlayer view with custom minimal controls
+                // ExoPlayer view with custom large play button
                 AndroidView(
                     factory = { ctx ->
-                        val playerView = LayoutInflater.from(ctx)
-                            .inflate(R.layout.kids_player_view, null) as PlayerView
-                        playerView.apply {
+                        (LayoutInflater.from(ctx).inflate(R.layout.kids_player_view, null) as PlayerView).apply {
                             player = exoPlayer
                             setControllerVisibilityListener(
                                 PlayerView.ControllerVisibilityListener { visibility ->
